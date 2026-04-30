@@ -39,6 +39,7 @@ export default function TxItem({ tx, onEdit, onDelete }) {
       </div>
 
       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+        {/* Edit button */}
         <button onClick={() => onEdit(tx)} style={{
           width: 30, height: 30, border: '1px solid var(--border2)', borderRadius: 8,
           background: 'var(--surface2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -49,7 +50,9 @@ export default function TxItem({ tx, onEdit, onDelete }) {
         >
           <Edit2 size={13} />
         </button>
-        <button onClick={() => onDelete(tx.id)} style={{
+
+        {/* Delete button — uses tx._id (MongoDB) with fallback to tx.id (localStorage) */}
+        <button onClick={() => onDelete(tx._id || tx.id)} style={{
           width: 30, height: 30, border: '1px solid var(--border2)', borderRadius: 8,
           background: 'var(--surface2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: 'var(--text2)', transition: 'all 0.18s'

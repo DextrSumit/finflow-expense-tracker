@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  LayoutDashboard, ArrowLeftRight, Target, BarChart2, Moon, Sun
+  LayoutDashboard, ArrowLeftRight, Target, BarChart2, User, Moon, Sun
 } from 'lucide-react';
 
 const NAV = [
@@ -9,6 +9,7 @@ const NAV = [
   { id: 'transactions', icon: ArrowLeftRight, label: 'Transactions' },
   { id: 'budget', icon: Target, label: 'Budget Planner' },
   { id: 'analytics', icon: BarChart2, label: 'Analytics' },
+  { id: 'profile',     icon: User,       label: 'Profile' },
 ];
 
 export default function Sidebar() {

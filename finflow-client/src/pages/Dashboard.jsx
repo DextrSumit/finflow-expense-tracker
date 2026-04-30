@@ -73,7 +73,7 @@ export default function Dashboard({ onEdit, onDelete }) {
           <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>Latest activity</div>
           {recent.length === 0
             ? <EmptyState icon="💸" title="No transactions yet" sub="Add your first transaction" />
-            : recent.map(tx => <TxItem key={tx.id} tx={tx} onEdit={onEdit} onDelete={onDelete} />)
+            : recent.map(tx => <TxItem key={tx._id || tx.id} tx={tx} onEdit={onEdit} onDelete={onDelete} />)
           }
         </Card>
 

@@ -1,12 +1,13 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { LayoutDashboard, ArrowLeftRight, Target, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Target, BarChart2, User } from 'lucide-react';
 
 const NAV = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
   { id: 'transactions', icon: ArrowLeftRight, label: 'Txns' },
   { id: 'budget', icon: Target, label: 'Budget' },
   { id: 'analytics', icon: BarChart2, label: 'Charts' },
+  { id: 'profile',     icon: User,       label: 'Profile' },
 ];
 
 export default function MobileNav() {

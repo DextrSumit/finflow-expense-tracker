@@ -53,7 +53,7 @@ export default function Transactions({ onEdit, onDelete }) {
       <Card>
         {filtered.length === 0
           ? <EmptyState icon="🔍" title="No transactions found" sub="Try adjusting your filters" />
-          : filtered.map(tx => <TxItem key={tx.id} tx={tx} onEdit={onEdit} onDelete={onDelete} />)
+          : filtered.map(tx => <TxItem key={tx._id || tx.id} tx={tx} onEdit={onEdit} onDelete={onDelete} />)
         }
       </Card>
     </div>
