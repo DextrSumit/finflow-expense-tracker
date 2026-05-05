@@ -2,7 +2,7 @@
 
 > A modern, full-stack expense tracker with authentication, real-time data, and smart insights.
 
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Version](https://img.shields.io/badge/version-1.1.0-green)
 ![React](https://img.shields.io/badge/React-18-blue)
 ![Node](https://img.shields.io/badge/Node.js-Express-brightgreen)
 ![MongoDB](https://img.shields.io/badge/Database-MongoDB-green)
@@ -17,6 +17,14 @@
 - Protected API routes — every user sees only their own data
 - Change password with old password verification
 - Auto logout on token expiry
+
+### 🏠 Landing Page
+- Premium fintech-inspired hero section with gradient accents
+- Smooth scroll navigation with sticky navbar
+- Feature showcase grid with hover animations
+- Step-by-step "How it works" section
+- About section with live dashboard preview card & AI insight float
+- Responsive CTA sections and footer
 
 ### 📊 Dashboard
 - Total balance, income & expense stats (all time)
@@ -47,19 +55,21 @@
 - Export **PDF report** (browser native)
 
 ### 👤 User Profile
-- View and edit display name
-- Upload profile picture (base64)
+- View and edit display name (inline editing with save/cancel)
+- **Emoji avatar picker** — 20 themed avatars with colored backgrounds
+- Fallback to initials when no avatar is selected
 - Account stats — balance, income, expenses, savings rate
 - Activity summary — total transactions, income/expense count
-- Change password
+- Change password with validation
 - Logout
 
 ### 🎨 UI/UX
-- Clean fintech-inspired design
+- Premium fintech-inspired design with glassmorphism elements
 - **Dark mode** toggle (persisted)
 - Fully **responsive** — sidebar on desktop, bottom nav on mobile
-- Smooth animations and transitions
+- Smooth animations and micro-interactions
 - Empty states and loading indicators
+- Sticky page header with date and quick-add button
 
 ---
 
@@ -70,6 +80,7 @@
 |---|---|
 | React 18 | UI framework |
 | Chart.js 4 + react-chartjs-2 | Data visualization |
+| date-fns | Date utilities |
 | Lucide React | Icons |
 | DM Sans + DM Mono | Typography |
 | CSS Custom Properties | Theming & dark mode |
@@ -77,8 +88,8 @@
 ### Backend
 | Tech | Purpose |
 |---|---|
-| Node.js + Express | REST API server |
-| MongoDB + Mongoose | Database |
+| Node.js + Express 5 | REST API server |
+| MongoDB + Mongoose 9 | Database |
 | JWT (jsonwebtoken) | Authentication tokens |
 | bcryptjs | Password & OTP hashing |
 | Nodemailer | OTP email delivery |
@@ -90,7 +101,7 @@
 ## 📁 Project Structure
 
 ```
-finflow/                          ← React frontend (port 3000)
+finflow-client/                   ← React frontend (port 3000)
   src/
     context/
       AppContext.jsx               # Global state — auth, transactions, budgets, theme
@@ -102,19 +113,21 @@ finflow/                          ← React frontend (port 3000)
       TransactionModal.jsx         # Add / Edit transaction form
       AIInsights.jsx               # Auto-generated spending insight cards
     pages/
+      LandingPage.jsx              # Public landing page with hero, features, about
       Dashboard.jsx                # Overview page
       Transactions.jsx             # Full transaction list with filters
       Budget.jsx                   # Budget planner (strict calendar month)
       Analytics.jsx                # Charts + PDF export
-      Profile.jsx                  # User profile + settings
+      Profile.jsx                  # User profile + avatar picker + settings
       AuthPage.jsx                 # Login / Register / OTP verify screens
     hooks/
       useTransactionFilter.js      # Search, filter, sort logic
     utils/
       api.js                       # All fetch calls to backend API
+      avatarUtils.js               # Emoji avatar options & lookup
       helpers.js                   # fmt, fmtDate, exportCSV, getLast6Months
       pdfExport.js                 # Browser-native PDF report generator
-    App.jsx                        # Root — auth guard + routing
+    App.jsx                        # Root — landing/auth guard + routing
     index.js                       # Entry point
     index.css                      # CSS variables, animations, responsive breakpoints
 
@@ -147,7 +160,7 @@ finflow-server/                   ← Express backend (port 5000)
 
 ```bash
 # Frontend
-cd finflow
+cd finflow-client
 npm install
 
 # Backend
@@ -179,7 +192,7 @@ npm run dev
 # Should print: ✅ MongoDB connected! ✅ Server running on port 5000
 
 # Terminal 2 — Frontend
-cd finflow
+cd finflow-client
 npm start
 # Opens http://localhost:3000
 ```
@@ -210,6 +223,24 @@ npm start
 | GET | `/api/profile` | Get user profile |
 | PUT | `/api/profile` | Update name / avatar |
 | PUT | `/api/profile/change-password` | Change password |
+
+---
+
+## 📋 Changelog
+
+### v1.1.0 — Improved UI
+- ✨ Premium fintech-inspired landing page with hero, features, about & CTA sections
+- ✨ Emoji avatar picker with 20 themed avatars and colored backgrounds
+- ✨ Redesigned profile page with inline name editing and stats cards
+- 🎨 Improved overall UI polish — animations, spacing, and micro-interactions
+- 🎨 Sticky navbar with glassmorphism on scroll
+- 🐛 Various bug fixes and responsive layout improvements
+
+### v1.0.0 — Initial Release
+- Full authentication flow with OTP email verification
+- Dashboard, transactions, budget planner, analytics
+- Dark mode, CSV export, PDF reports
+- User profile with password management
 
 ---
 
