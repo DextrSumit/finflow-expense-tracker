@@ -68,6 +68,10 @@ updateProfile: (data) => fetch(`${BASE}/profile`, {
   body: JSON.stringify(data),
 }).then(r => r.json()),
 
+getProfile: () => fetch(`${BASE}/profile`, {
+  headers: headers(),
+}).then(r => r.json()),
+
 changePassword: (data) => fetch(`${BASE}/profile/change-password`, {
   method: 'PUT',
   headers: headers(),

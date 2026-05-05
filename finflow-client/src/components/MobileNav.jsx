@@ -18,8 +18,7 @@ export default function MobileNav() {
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
       background: 'var(--surface)', borderTop: '1px solid var(--border)',
       padding: '8px 0 env(safe-area-inset-bottom, 8px)',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      className: 'mobile-nav',
+      gridTemplateColumns: 'repeat(5, 1fr)',
     }}
       className="mobile-nav"
     >
@@ -27,12 +26,18 @@ export default function MobileNav() {
         const active = activePage === id;
         return (
           <button key={id} onClick={() => setActivePage(id)} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
             padding: '6px 0', border: 'none', background: 'transparent', cursor: 'pointer',
-            color: active ? 'var(--green)' : 'var(--text3)', fontFamily: 'var(--font)',
-            fontSize: 11, fontWeight: active ? 600 : 400, transition: 'color 0.18s',
-          }}>
-            <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+            color: active ? 'var(--blue)' : 'var(--text3)', fontFamily: 'var(--font)',
+            fontSize: 11, fontWeight: active ? 600 : 500, transition: 'all 0.2s ease',
+          }}
+          >
+            <div style={{
+              padding: '4px 12px', borderRadius: 16, background: active ? 'var(--blue-light)' : 'transparent',
+              transition: 'background 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+            </div>
             {label}
           </button>
         );

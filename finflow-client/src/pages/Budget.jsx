@@ -150,15 +150,16 @@ export default function Budget() {
                       <button
                         onClick={() => deleteCatBudget(cat)}
                         style={{
-                          width: 28, height: 28, border: '1px solid var(--border2)', borderRadius: 7,
-                          background: 'var(--surface2)', cursor: 'pointer', display: 'flex',
+                          width: 32, height: 32, border: 'none', borderRadius: 8,
+                          background: 'transparent', cursor: 'pointer', display: 'flex',
                           alignItems: 'center', justifyContent: 'center',
-                          color: 'var(--text3)', transition: 'all 0.18s'
+                          color: 'var(--text3)', transition: 'all 0.2s ease'
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--red-light)'; e.currentTarget.style.color = 'var(--red)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.color = 'var(--text3)'; }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--red-light)'; e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.transform = 'none'; }}
+                        onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>

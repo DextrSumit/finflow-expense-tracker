@@ -56,10 +56,10 @@ function generateInsights(transactions, budgets) {
 }
 
 const COLORS = {
-  good: { bg: 'rgba(76,175,80,0.08)', border: 'rgba(76,175,80,0.2)', text: 'var(--green)', icon: '✓' },
-  info: { bg: 'rgba(33,150,243,0.08)', border: 'rgba(33,150,243,0.2)', text: 'var(--blue)', icon: 'ℹ' },
-  warn: { bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.2)', text: 'var(--amber)', icon: '⚡' },
-  danger: { bg: 'rgba(255,112,67,0.1)', border: 'rgba(255,112,67,0.25)', text: 'var(--red)', icon: '⚠' },
+  good: { bg: 'var(--green-light)', border: 'rgba(16, 185, 129, 0.2)', text: 'var(--green)', icon: '✓' },
+  info: { bg: 'var(--blue-light)', border: 'rgba(99, 102, 241, 0.2)', text: 'var(--blue)', icon: 'ℹ' },
+  warn: { bg: 'var(--amber-light)', border: 'rgba(245, 158, 11, 0.2)', text: 'var(--amber)', icon: '⚡' },
+  danger: { bg: 'var(--red-light)', border: 'rgba(244, 63, 94, 0.2)', text: 'var(--red)', icon: '⚠' },
 };
 
 export default function AIInsights() {

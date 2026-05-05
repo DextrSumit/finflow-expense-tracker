@@ -141,6 +141,16 @@ export function AppProvider({ children }) {
       localStorage.setItem('ff_token', data.token);
       localStorage.setItem('ff_user', JSON.stringify(data.user));
       setCurrentUser(data.user);
+
+      try {
+      const profile = await api.getProfile();
+      if (profile.user) {
+        const fresh = { ...data.user, avatar: profile.user.avatar, name: profile.user.name };
+        localStorage.setItem('ff_user', JSON.stringify(fresh));
+        setCurrentUser(fresh);
+      }
+    } catch {}
+    
       return true;
     } catch {
       setAuthError('Login failed. Please try again.');

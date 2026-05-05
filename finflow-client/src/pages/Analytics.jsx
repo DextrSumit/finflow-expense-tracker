@@ -13,7 +13,7 @@ import { Doughnut, Bar, Line } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
-const CHART_COLORS = ['#FF7043','#2196F3','#4CAF50','#FF9800','#9C27B0','#00BCD4','#F44336','#607D8B','#E91E63','#795548'];
+const CHART_COLORS = ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6','#0ea5e9','#ec4899','#14b8a6','#f97316','#84cc16'];
 
 export default function Analytics() {
   const { transactions, budgets, theme } = useApp();
@@ -106,7 +106,7 @@ export default function Analytics() {
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Income vs Expenses</div>
           <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>Last 6 months</div>
           <div style={{ display: 'flex', gap: 14, marginBottom: 14 }}>
-            {[{ color: '#4CAF50', label: 'Income' }, { color: '#FF7043', label: 'Expenses' }].map(x => (
+            {[{ color: '#10b981', label: 'Income' }, { color: '#f43f5e', label: 'Expenses' }].map(x => (
               <span key={x.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text2)' }}>
                 <span style={{ width: 10, height: 10, borderRadius: 2, background: x.color }} />{x.label}
               </span>
@@ -117,16 +117,16 @@ export default function Analytics() {
               data={{
                 labels: months.map(m => m.label),
                 datasets: [
-                  { label: 'Income', data: incData, backgroundColor: 'rgba(76,175,80,0.85)', borderRadius: 6, borderSkipped: false },
-                  { label: 'Expenses', data: expData, backgroundColor: 'rgba(255,112,67,0.85)', borderRadius: 6, borderSkipped: false },
+                  { label: 'Income', data: incData, backgroundColor: 'rgba(16, 185, 129, 0.85)', borderRadius: 6, borderSkipped: false },
+                  { label: 'Expenses', data: expData, backgroundColor: 'rgba(244, 63, 94, 0.85)', borderRadius: 6, borderSkipped: false },
                 ]
               }}
               options={{
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false }, tooltip: { ...commonTooltip } },
                 scales: {
-                  x: { grid: { display: false }, ticks: { color: tickColor, font: { family: 'DM Sans' } } },
-                  y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { family: 'DM Mono' }, callback: v => '₹' + Math.round(v / 1000) + 'k' } }
+                  x: { grid: { display: false }, ticks: { color: tickColor, font: { family: 'var(--font)' } } },
+                  y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { family: 'var(--font-mono)' }, callback: v => '₹' + Math.round(v / 1000) + 'k' } }
                 }
               }}
             />
@@ -144,16 +144,16 @@ export default function Analytics() {
               labels: months.map(m => m.label),
               datasets: [{
                 label: 'Expenses', data: expData,
-                borderColor: '#FF7043', backgroundColor: 'rgba(255,112,67,0.07)',
-                fill: true, tension: 0.45, pointBackgroundColor: '#FF7043', pointRadius: 5, pointHoverRadius: 7,
+                borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                fill: true, tension: 0.45, pointBackgroundColor: '#f43f5e', pointRadius: 5, pointHoverRadius: 7,
               }]
             }}
             options={{
               responsive: true, maintainAspectRatio: false,
               plugins: { legend: { display: false }, tooltip: { ...commonTooltip } },
               scales: {
-                x: { grid: { display: false }, ticks: { color: tickColor, font: { family: 'DM Sans' } } },
-                y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { family: 'DM Mono' }, callback: v => '₹' + Math.round(v / 1000) + 'k' } }
+                x: { grid: { display: false }, ticks: { color: tickColor, font: { family: 'var(--font)' } } },
+                y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { family: 'var(--font-mono)' }, callback: v => '₹' + Math.round(v / 1000) + 'k' } }
               }
             }}
           />

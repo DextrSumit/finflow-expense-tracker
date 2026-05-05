@@ -25,7 +25,7 @@ router.put('/', async (req, res) => {
     const { name, avatar } = req.body;
     const updates = {};
     if (name)   updates.name   = name;
-    if (avatar) updates.avatar = avatar; // base64 string
+    if (avatar !== undefined)     updates.avatar = avatar;
 
     const user = await User.findByIdAndUpdate(
       req.userId,
