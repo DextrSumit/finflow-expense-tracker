@@ -1,48 +1,38 @@
 const router   = require('express').Router();
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const User     = require('../models/User');
 
-// ── Force IPv4 globally (Render free tier blocks IPv6) ─────────────────────
-const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first');
-
-// ── Email transporter ──────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-// Verify SMTP connection on startup
-transporter.verify()
-  .then(() => console.log('✅ SMTP connection verified — emails will work'))
-  .catch(err => console.error('❌ SMTP connection FAILED:', err.message));
+// ── Verify Brevo API key on startup ──────────────────────────────────────
+if (process.env.BREVO_API_KEY) {
+  console.log('✅ BREVO_API_KEY is set — emails will use Brevo API (HTTPS)');
+} else {
+  console.error('❌ BREVO_API_KEY is NOT set — OTP emails will fail!');
+}
 
 // ── Helper: generate 6-digit OTP ─────────────────────────────────────────
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // "382910"
 }
 
-// ── Helper: send OTP email ────────────────────────────────────────────────
+// ── Helper: send OTP email via Brevo API (HTTPS, not SMTP) ───────────────
+// Render free tier blocks SMTP ports (587/465/25), so we use Brevo's
+// REST API which goes over HTTPS (port 443) — always works.
+// Free tier: 300 emails/day, no domain verification needed.
 async function sendOTPEmail(email, otp) {
-  console.log(`[OTP] Attempting to send OTP to ${email}...`);
-  console.log(`[OTP] EMAIL_USER set: ${!!process.env.EMAIL_USER}, EMAIL_PASS set: ${!!process.env.EMAIL_PASS}`);
+  console.log(`[OTP] Attempting to send OTP to ${email} via Brevo API...`);
 
-  try {
-    const info = await transporter.sendMail({
-      from: `"FinFlow" <${process.env.EMAIL_USER}>`,
-      to: email,
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: 'FinFlow', email: process.env.BREVO_SENDER || 'shakyasumit347@gmail.com' },
+      to: [{ email }],
       subject: 'Your FinFlow Verification Code',
-      html: `
+      htmlContent: `
         <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #eee; border-radius: 12px;">
           <h2 style="color: #4CAF50; margin-bottom: 8px;">FinFlow</h2>
           <p style="color: #333; font-size: 15px;">Your email verification code is:</p>
@@ -54,13 +44,17 @@ async function sendOTPEmail(email, otp) {
           <p style="color: #bbb; font-size: 12px;">If you didn't create a FinFlow account, ignore this email.</p>
         </div>
       `,
-    });
-    console.log(`[OTP] ✅ Email sent successfully! MessageId: ${info.messageId}`);
-  } catch (emailErr) {
-    console.error(`[OTP] ❌ Email send FAILED:`, emailErr.message);
-    console.error(`[OTP] Full error:`, emailErr);
-    throw emailErr; // re-throw so caller can handle it
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error(`[OTP] ❌ Brevo API error (${res.status}):`, JSON.stringify(data));
+    throw new Error(data.message || `Brevo API error: ${res.status}`);
   }
+
+  console.log(`[OTP] ✅ Email sent successfully! MessageId: ${data.messageId}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
