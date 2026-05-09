@@ -63,9 +63,9 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <span style={{ color: 'var(--text)' }}>Flow</span>
         </div>
         <div style={s.navLinks}>
-          <button style={s.navLink} onClick={() => scrollTo('features')}>Features</button>
-          <button style={s.navLink} onClick={() => scrollTo('about')}>About</button>
-          <button style={s.navLink} onClick={() => scrollTo('how-it-works')}>How it works</button>
+          <button className="hide-on-mobile" style={s.navLink} onClick={() => scrollTo('features')}>Features</button>
+          <button className="hide-on-mobile" style={s.navLink} onClick={() => scrollTo('about')}>About</button>
+          <button className="hide-on-mobile" style={s.navLink} onClick={() => scrollTo('how-it-works')}>How it works</button>
           
           <button onClick={toggleTheme} style={{
             background: 'none', border: 'none', cursor: 'pointer',
@@ -318,8 +318,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
       {/* ── About Section ────────────────────────────────────────────────── */}
       <section id="about" style={{ padding: '100px 40px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60,
+        <div className="grid-2-to-1" style={{
+          display: 'grid', gap: 60,
           alignItems: 'center',
         }}>
           {/* Left — text */}

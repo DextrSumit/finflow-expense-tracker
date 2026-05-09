@@ -55,25 +55,6 @@ function AppInner() {
 
   return (
     <>
-      <style>{`
-        @media (max-width: 768px) {
-          .app-sidebar { display: none !important; }
-          .mobile-nav { display: grid !important; }
-          .app-main { padding-bottom: 72px !important; }
-          .main-header { padding: 14px 16px 12px !important; }
-          .main-content { padding: 16px !important; }
-          .cards-3col { grid-template-columns: 1fr 1fr !important; }
-          .charts-2col { grid-template-columns: 1fr !important; }
-          .filters-6col { grid-template-columns: 1fr 1fr !important; }
-          .month-4col { grid-template-columns: 1fr 1fr !important; }
-          .stats-3col { grid-template-columns: 1fr 1fr !important; }
-        }
-        @media (max-width: 480px) {
-          .cards-3col { grid-template-columns: 1fr !important; }
-          .filters-6col { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-
       <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
         <div className="app-sidebar"><Sidebar /></div>
 

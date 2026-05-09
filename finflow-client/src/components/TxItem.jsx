@@ -10,7 +10,7 @@ export default function TxItem({ tx, onEdit, onDelete }) {
   const isIncome = tx.type === 'income';
 
   return (
-    <div style={{
+    <div className="tx-item" style={{
       display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px',
       borderBottom: '1px solid var(--border)', animation: 'fadeIn 0.2s ease',
       borderRadius: 'var(--radius-sm)', transition: 'all 0.2s ease',
@@ -19,33 +19,33 @@ export default function TxItem({ tx, onEdit, onDelete }) {
     onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
     onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'none'; }}
     >
-      <div style={{
+      <div className="tx-icon" style={{
         width: 44, height: 44, borderRadius: 12, background: isIncome ? 'var(--green-light)' : 'var(--red-light)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
       }}>{meta.icon}</div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: 'var(--text)' }}>
+        <div className="tx-title" style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: 'var(--text)' }}>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220, letterSpacing: '-0.01em' }}>
             {tx.desc || tx.category}
           </span>
           {tx.recur && <Badge color="var(--blue)" bg="var(--blue-light)">↻ {tx.recur}</Badge>}
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4, fontWeight: 500 }}>
-          {tx.category} • {fmtDate(tx.date)}
+        <div className="tx-sub" style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4, fontWeight: 500 }}>
+          {tx.desc ? `${tx.category} • ` : ''}{fmtDate(tx.date)}
         </div>
       </div>
 
-      <div style={{
+      <div className="tx-amount" style={{
         fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, letterSpacing: '-0.02em',
         color: isIncome ? 'var(--green)' : 'var(--text)',
       }}>
         {isIncome ? '+' : '−'}{fmt(tx.amount)}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 8 }}>
-        {/* Edit button */}
-        <button onClick={() => onEdit(tx)} style={{
+      <div className="tx-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 8 }}>
+        {/* Edit button — hidden on mobile via .tx-edit-btn */}
+        <button className="tx-edit-btn" onClick={() => onEdit(tx)} style={{
           width: 32, height: 32, border: 'none', borderRadius: 8,
           background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: 'var(--text3)', transition: 'all 0.2s ease'

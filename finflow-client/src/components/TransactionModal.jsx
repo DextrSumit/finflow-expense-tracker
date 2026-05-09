@@ -65,7 +65,7 @@ export default function TransactionModal({ open, onClose, editTx }) {
       </div>
 
       {/* Amount + Date */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+      <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
         <Input
           label="Amount (₹)"
           type="number"
@@ -83,7 +83,7 @@ export default function TransactionModal({ open, onClose, editTx }) {
       </div>
 
       {/* Category + Recurring */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+      <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
         <Select
           label="Category"
           value={form.category}

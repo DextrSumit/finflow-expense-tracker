@@ -18,8 +18,10 @@ export default function Transactions({ onEdit, onDelete }) {
   return (
     <div style={{ animation: 'slideUp 0.3s ease' }}>
       <Card style={{ marginBottom: 14 }}>
-        <div className="filters-6col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto auto', gap: 10, alignItems: 'end' }}>
-          <Input placeholder="Search transactions…" value={search} onChange={e => setSearch(e.target.value)} label="Search" />
+        <div className="filters-6col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto', gap: 10, alignItems: 'end' }}>
+          <div className="filter-search">
+            <Input placeholder="Search transactions…" value={search} onChange={e => setSearch(e.target.value)} label="Search" />
+          </div>
           <Select label="Category" value={category} onChange={e => setCategory(e.target.value)}>
             <option value="">All Categories</option>
             {ALL_CATEGORIES.map(c => <option key={c.name} value={c.name}>{c.icon} {c.name}</option>)}
@@ -31,12 +33,14 @@ export default function Transactions({ onEdit, onDelete }) {
           </Select>
           <Input label="From" type="date" value={from} onChange={e => setFrom(e.target.value)} />
           <Input label="To" type="date" value={to} onChange={e => setTo(e.target.value)} />
-          <Btn onClick={reset} variant="ghost" style={{ height: 42 }} title="Clear filters">
-            <X size={14} />
-          </Btn>
-          <Btn onClick={() => exportCSV(filtered)} variant="ghost" style={{ height: 42 }}>
-            <Download size={14} /> CSV
-          </Btn>
+          <div className="filter-actions" style={{ display: 'flex', gap: 8 }}>
+            <Btn onClick={reset} variant="ghost" style={{ height: 42 }} title="Clear filters">
+              <X size={14} />
+            </Btn>
+            <Btn onClick={() => exportCSV(filtered)} variant="ghost" style={{ height: 42 }}>
+              <Download size={14} /> CSV
+            </Btn>
+          </div>
         </div>
       </Card>
 

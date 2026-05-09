@@ -88,25 +88,61 @@ input, select, textarea { font-family: var(--font); }
 /* Mobile nav */
 .mobile-nav { display: none; }
 
-/* Responsive breakpoints */
+/* Responsive breakpoints & utility classes */
 @media (max-width: 768px) {
+  .hide-on-mobile { display: none !important; }
   .app-sidebar { display: none !important; }
   .mobile-nav { display: grid !important; }
   .app-main { padding-bottom: 76px !important; }
   .main-header { padding: 16px 20px 14px !important; }
   .main-content { padding: 16px 20px !important; }
+  
+  /* Layout utilities */
   .cards-3col { grid-template-columns: 1fr 1fr !important; }
   .charts-2col { grid-template-columns: 1fr !important; }
   .month-4col { grid-template-columns: 1fr 1fr !important; }
   .stats-3col { grid-template-columns: 1fr 1fr !important; }
   .filters-6col { grid-template-columns: 1fr 1fr !important; }
+  
+  /* New layout utilities */
+  .grid-4-to-2 { grid-template-columns: 1fr 1fr !important; }
+  .grid-3-to-1 { grid-template-columns: 1fr !important; }
+  .grid-2-to-1 { grid-template-columns: 1fr !important; }
+  
   .add-btn-text { display: none; }
+
+  /* Transaction filters — stack into rows */
+  .filters-6col {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .filter-search { grid-column: 1 / -1 !important; }
+  .filter-actions { 
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  /* Transaction items — compact on mobile */
+  .tx-item { padding: 10px 8px !important; gap: 10px !important; }
+  .tx-icon { width: 36px !important; height: 36px !important; font-size: 16px !important; border-radius: 10px !important; }
+  .tx-title { font-size: 14px !important; }
+  .tx-title span { max-width: 140px !important; }
+  .tx-sub { font-size: 12px !important; margin-top: 2px !important; }
+  .tx-amount { font-size: 14px !important; }
+  .tx-actions { gap: 4px !important; margin-left: 4px !important; }
+  .tx-actions button { width: 28px !important; height: 28px !important; }
+  .tx-edit-btn { display: none !important; }
+
+  /* Modal — tighter padding on mobile */
+  .modal-body { padding: 20px !important; }
+  .modal-grid-2 { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 480px) {
   .cards-3col { grid-template-columns: 1fr !important; }
   .filters-6col { grid-template-columns: 1fr !important; }
   .month-4col { grid-template-columns: 1fr 1fr !important; }
+  .grid-4-to-2 { grid-template-columns: 1fr !important; }
 }
 
 /* Print styles */

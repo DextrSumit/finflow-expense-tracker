@@ -4,12 +4,18 @@ const jwt      = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User     = require('../models/User');
 
-// ── Email transporter (uses .env credentials) ─────────────────────────────
+// ── Email transporter (forces IPv4 for Render compatibility) ───────────────
+const dns = require('dns');
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,  // use Gmail App Password, not your real password
+    pass: process.env.EMAIL_PASS,
+  },
+  dnsLookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4 }, callback);
   },
 });
 

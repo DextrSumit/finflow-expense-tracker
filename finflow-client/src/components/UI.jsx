@@ -134,7 +134,7 @@ export function Modal({ open, onClose, title, children }) {
       position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex',
       alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(6px)', animation: 'fadeIn 0.2s ease'
     }}>
-      <div onClick={e => e.stopPropagation()} style={{
+      <div onClick={e => e.stopPropagation()} className="modal-body" style={{
         background: 'var(--surface)', borderRadius: 'var(--radius)', padding: 32,
         width: 480, maxWidth: '92vw', boxShadow: 'var(--shadow-lg)', animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)', border: '1px solid var(--border)'
       }}>

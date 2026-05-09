@@ -313,7 +313,7 @@ async function handleSelectAvatar(avatarId) {
       )}
 
       {/* ── Stats Cards ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+      <div className="grid-4-to-2" style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
         {[
           { label: 'Total Balance',  value: fmt(stats.balance),       color: 'var(--blue)' },
           { label: 'Total Income',   value: fmt(stats.totalIncome),   color: 'var(--green)' },
@@ -338,7 +338,7 @@ async function handleSelectAvatar(avatarId) {
       {/* ── Activity Stats ──────────────────────────────────────────────── */}
       <Card style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Account Activity</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div className="grid-3-to-1" style={{ display: 'grid', gap: 16 }}>
           {[
             { label: 'Total Transactions', value: totalTxCount,  icon: '⇄' },
             { label: 'Income Entries',     value: incomeCount,   icon: '↑' },
@@ -398,7 +398,7 @@ async function handleSelectAvatar(avatarId) {
             )}
             <div style={{ display: 'grid', gap: 14 }}>
               <Input label="Current Password" type="password" placeholder="Enter current password" value={oldPwd} onChange={e => setOldPwd(e.target.value)} required />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div className="grid-2-to-1" style={{ display: 'grid', gap: 14 }}>
                 <Input label="New Password" type="password" placeholder="Min. 6 characters" value={newPwd} onChange={e => setNewPwd(e.target.value)} required minLength={6} />
                 <Input label="Confirm Password" type="password" placeholder="Repeat new password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} required />
               </div>
