@@ -11,6 +11,9 @@ const userSchema = new mongoose.Schema({
   otp:         { type: String },
   otpExpires:  { type: Date },
 
+  // ── Role ───────────────────────────────────────────────────────────────
+  role:        { type: String, enum: ['user', 'admin'], default: 'user' },
+
 }, { timestamps: true }); // timestamps adds createdAt + updatedAt automatically
 
 module.exports = mongoose.model('User', userSchema);

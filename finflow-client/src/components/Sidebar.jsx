@@ -10,7 +10,6 @@ const NAV = [
   { id: 'transactions', icon: ArrowLeftRight,  label: 'Transactions' },
   { id: 'budget',       icon: Target,          label: 'Budget Planner' },
   { id: 'analytics',    icon: BarChart2,        label: 'Analytics' },
-  { id: 'profile',      icon: User,            label: 'Profile' },
 ];
 
 export default function Sidebar() {
