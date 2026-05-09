@@ -4,18 +4,21 @@ const jwt      = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User     = require('../models/User');
 
-// ── Email transporter (forces IPv4 for Render compatibility) ───────────────
+// ── Force IPv4 globally (Render free tier blocks IPv6) ─────────────────────
 const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
+// ── Email transporter ──────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  dnsLookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4 }, callback);
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
