@@ -22,6 +22,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Verify SMTP connection on startup
+transporter.verify()
+  .then(() => console.log('✅ SMTP connection verified — emails will work'))
+  .catch(err => console.error('❌ SMTP connection FAILED:', err.message));
+
 // ── Helper: generate 6-digit OTP ─────────────────────────────────────────
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // "382910"
@@ -29,23 +34,33 @@ function generateOTP() {
 
 // ── Helper: send OTP email ────────────────────────────────────────────────
 async function sendOTPEmail(email, otp) {
-  await transporter.sendMail({
-    from: `"FinFlow" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: 'Your FinFlow Verification Code',
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #eee; border-radius: 12px;">
-        <h2 style="color: #4CAF50; margin-bottom: 8px;">FinFlow</h2>
-        <p style="color: #333; font-size: 15px;">Your email verification code is:</p>
-        <div style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #1a1d23; margin: 20px 0; text-align: center;">
-          ${otp}
+  console.log(`[OTP] Attempting to send OTP to ${email}...`);
+  console.log(`[OTP] EMAIL_USER set: ${!!process.env.EMAIL_USER}, EMAIL_PASS set: ${!!process.env.EMAIL_PASS}`);
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"FinFlow" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your FinFlow Verification Code',
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #eee; border-radius: 12px;">
+          <h2 style="color: #4CAF50; margin-bottom: 8px;">FinFlow</h2>
+          <p style="color: #333; font-size: 15px;">Your email verification code is:</p>
+          <div style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #1a1d23; margin: 20px 0; text-align: center;">
+            ${otp}
+          </div>
+          <p style="color: #888; font-size: 13px;">This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+          <p style="color: #bbb; font-size: 12px;">If you didn't create a FinFlow account, ignore this email.</p>
         </div>
-        <p style="color: #888; font-size: 13px;">This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-        <p style="color: #bbb; font-size: 12px;">If you didn't create a FinFlow account, ignore this email.</p>
-      </div>
-    `,
-  });
+      `,
+    });
+    console.log(`[OTP] ✅ Email sent successfully! MessageId: ${info.messageId}`);
+  } catch (emailErr) {
+    console.error(`[OTP] ❌ Email send FAILED:`, emailErr.message);
+    console.error(`[OTP] Full error:`, emailErr);
+    throw emailErr; // re-throw so caller can handle it
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -91,7 +106,18 @@ router.post('/register', async (req, res) => {
     }
 
     // 6. Send OTP email
-    await sendOTPEmail(email, otp);
+    try {
+      await sendOTPEmail(email, otp);
+    } catch (emailErr) {
+      // User was saved but email failed — still return success with warning
+      // so user can use "Resend OTP" on the verify screen
+      console.error('Register: User saved but OTP email failed:', emailErr.message);
+      return res.status(201).json({
+        message: 'Account created but we could not send the verification email. Please use "Resend OTP" on the next screen.',
+        email,
+        emailFailed: true,
+      });
+    }
 
     res.status(201).json({
       message: 'Registration successful! Check your email for the 6-digit verification code.',
@@ -100,6 +126,7 @@ router.post('/register', async (req, res) => {
 
   } catch (err) {
     console.error('Register error:', err.message);
+    console.error('Register full error:', err);
     res.status(500).json({ message: 'Registration failed. Please try again.' });
   }
 });
