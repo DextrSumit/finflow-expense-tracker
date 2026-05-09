@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useApp } from '../context/AppContext';
+import { Moon, Sun } from 'lucide-react';
 
 export default function LandingPage({ onGetStarted, onLogin }) {
+  const { theme, toggleTheme } = useApp();
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -63,6 +66,19 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <button style={s.navLink} onClick={() => scrollTo('features')}>Features</button>
           <button style={s.navLink} onClick={() => scrollTo('about')}>About</button>
           <button style={s.navLink} onClick={() => scrollTo('how-it-works')}>How it works</button>
+          
+          <button onClick={toggleTheme} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text2)', display: 'flex', alignItems: 'center',
+            padding: 8, borderRadius: '50%', transition: 'background 0.2s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           <button style={s.btnOutline} onClick={onLogin}>Log In</button>
           <button style={s.btnPrimary} onClick={onGetStarted}>Get Started</button>
         </div>
