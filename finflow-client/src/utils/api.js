@@ -78,4 +78,42 @@ changePassword: (data) => fetch(`${BASE}/profile/change-password`, {
   body: JSON.stringify(data),
 }).then(r => r.json()),
 
+// ── EVENTS ────────────────────────────────────────────────────────────────
+getEvents: () => fetch(`${BASE}/events`, {
+  headers: headers(),
+}).then(r => r.json()),
+
+getEventDetail: (id) => fetch(`${BASE}/events/${id}`, {
+  headers: headers(),
+}).then(r => r.json()),
+
+createEvent: (data) => fetch(`${BASE}/events`, {
+  method: 'POST',
+  headers: headers(),
+  body: JSON.stringify(data),
+}).then(r => r.json()),
+
+updateEvent: (id, data) => fetch(`${BASE}/events/${id}`, {
+  method: 'PUT',
+  headers: headers(),
+  body: JSON.stringify(data),
+}).then(r => r.json()),
+
+deleteEvent: (id) => fetch(`${BASE}/events/${id}`, {
+  method: 'DELETE',
+  headers: headers(),
+}).then(r => r.json()),
+
+// ── EVENT EXPENSES ────────────────────────────────────────────────────────
+addEventExpense: (eventId, data) => fetch(`${BASE}/events/${eventId}/expenses`, {
+  method: 'POST',
+  headers: headers(),
+  body: JSON.stringify(data),
+}).then(r => r.json()),
+
+deleteEventExpense: (eventId, txId) => fetch(`${BASE}/events/${eventId}/expenses/${txId}`, {
+  method: 'DELETE',
+  headers: headers(),
+}).then(r => r.json()),
+
 };

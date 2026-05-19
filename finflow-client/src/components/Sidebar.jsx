@@ -2,14 +2,15 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { getAvatar } from '../utils/avatarUtils';
 import {
-  LayoutDashboard, ArrowLeftRight, Target, BarChart2, User, Moon, Sun, LogOut
+  LayoutDashboard, ArrowLeftRight, Target, BarChart2, User, Moon, Sun, LogOut, CalendarDays
 } from 'lucide-react';
 
 const NAV = [
   { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
   { id: 'transactions', icon: ArrowLeftRight,  label: 'Transactions' },
+  { id: 'events',       icon: CalendarDays,    label: 'Events' },
   { id: 'budget',       icon: Target,          label: 'Budget Planner' },
-  { id: 'analytics',    icon: BarChart2,        label: 'Analytics' },
+  { id: 'analytics',   icon: BarChart2,        label: 'Analytics' },
 ];
 
 export default function Sidebar() {

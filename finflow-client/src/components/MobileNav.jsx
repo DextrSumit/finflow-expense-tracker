@@ -1,13 +1,14 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { LayoutDashboard, ArrowLeftRight, Target, BarChart2, User } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Target, BarChart2, User, CalendarDays } from 'lucide-react';
 
 const NAV = [
-  { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
-  { id: 'transactions', icon: ArrowLeftRight, label: 'Txns' },
-  { id: 'budget', icon: Target, label: 'Budget' },
-  { id: 'analytics', icon: BarChart2, label: 'Charts' },
-  { id: 'profile',     icon: User,       label: 'Profile' },
+  { id: 'dashboard',    icon: LayoutDashboard, label: 'Home' },
+  { id: 'transactions', icon: ArrowLeftRight,  label: 'Txns' },
+  { id: 'events',       icon: CalendarDays,    label: 'Events' },
+  { id: 'budget',       icon: Target,          label: 'Budget' },
+  { id: 'analytics',   icon: BarChart2,        label: 'Charts' },
+  { id: 'profile',     icon: User,             label: 'Profile' },
 ];
 
 export default function MobileNav() {
@@ -18,7 +19,7 @@ export default function MobileNav() {
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
       background: 'var(--surface)', borderTop: '1px solid var(--border)',
       padding: '8px 0 env(safe-area-inset-bottom, 8px)',
-      gridTemplateColumns: 'repeat(5, 1fr)',
+      gridTemplateColumns: 'repeat(6, 1fr)',
     }}
       className="mobile-nav"
     >

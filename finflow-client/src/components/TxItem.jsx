@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Btn, Badge } from './UI';
 import { fmt, fmtDate } from '../utils/helpers';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Lock } from 'lucide-react';
 
 export default function TxItem({ tx, onEdit, onDelete }) {
   const { getCatMeta } = useApp();
@@ -29,7 +29,8 @@ export default function TxItem({ tx, onEdit, onDelete }) {
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220, letterSpacing: '-0.01em' }}>
             {tx.desc || tx.category}
           </span>
-          {tx.recur && <Badge color="var(--blue)" bg="var(--blue-light)">↻ {tx.recur}</Badge>}
+          {tx.recur   && <Badge color="var(--blue)"   bg="var(--blue-light)">↻ {tx.recur}</Badge>}
+          {tx.eventId && <Badge color="var(--purple)" bg="var(--purple-light)">🎉 Event</Badge>}
         </div>
         <div className="tx-sub" style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4, fontWeight: 500 }}>
           {tx.desc ? `${tx.category} • ` : ''}{fmtDate(tx.date)}
@@ -44,18 +45,30 @@ export default function TxItem({ tx, onEdit, onDelete }) {
       </div>
 
       <div className="tx-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 8 }}>
-        {/* Edit button — hidden on mobile via .tx-edit-btn */}
-        <button className="tx-edit-btn" onClick={() => onEdit(tx)} style={{
-          width: 32, height: 32, border: 'none', borderRadius: 8,
-          background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'var(--text3)', transition: 'all 0.2s ease'
-        }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--green-light)'; e.currentTarget.style.color = 'var(--green)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.transform = 'none'; }}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
-        >
-          <Edit2 size={14} />
-        </button>
+        {/* Edit button — disabled for event expenses with tooltip */}
+        {tx.eventId ? (
+          <div title="Edit from the Events page" style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="tx-edit-btn" disabled style={{
+              width: 32, height: 32, border: 'none', borderRadius: 8,
+              background: 'transparent', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--border2)', opacity: 0.5,
+            }}>
+              <Lock size={13} />
+            </button>
+          </div>
+        ) : (
+          <button className="tx-edit-btn" onClick={() => onEdit(tx)} style={{
+            width: 32, height: 32, border: 'none', borderRadius: 8,
+            background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--text3)', transition: 'all 0.2s ease'
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--green-light)'; e.currentTarget.style.color = 'var(--green)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.transform = 'none'; }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+          >
+            <Edit2 size={14} />
+          </button>
+        )}
 
         {/* Delete button — uses tx._id (MongoDB) with fallback to tx.id (localStorage) */}
         <button onClick={() => onDelete(tx._id || tx.id)} style={{

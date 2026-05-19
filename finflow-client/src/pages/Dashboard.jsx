@@ -85,7 +85,7 @@ export default function Dashboard({ onEdit, onDelete }) {
             ? <EmptyState icon="🎯" title="No budgets set" sub="Go to Budget Planner" />
             : catBudgets.map(cat => {
               const meta = getCatMeta(cat);
-              const spent = transactions.filter(t => t.type === 'expense' && t.category === cat && new Date(t.date).getMonth() === cm && new Date(t.date).getFullYear() === cy).reduce((s, t) => s + t.amount, 0);
+              const spent = transactions.filter(t => t.type === 'expense' && t.category === cat && new Date(t.date).getMonth() === cm && new Date(t.date).getFullYear() === cy && !t.eventId).reduce((s, t) => s + t.amount, 0);
               const limit = budgets.cats[cat];
               const pct = (spent / limit) * 100;
               return (

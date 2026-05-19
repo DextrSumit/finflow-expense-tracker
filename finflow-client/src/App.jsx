@@ -10,11 +10,13 @@ import Analytics from './pages/Analytics';
 import AuthPage from './pages/AuthPage';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
+import Events from './pages/Events';
 import { Plus } from 'lucide-react';
 
 const PAGE_TITLES = {
   dashboard:    'Dashboard',
   transactions: 'Transactions',
+  events:       'Events',
   budget:       'Budget Planner',
   analytics:    'Analytics',
   profile:      'My Profile',
@@ -74,7 +76,7 @@ function AppInner() {
                   {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
               </div>
-              {activePage !== 'profile' && (
+              {activePage !== 'profile' && activePage !== 'events' && (
                 <button onClick={handleAdd} style={{
                   display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
                   background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 12,
@@ -95,6 +97,7 @@ function AppInner() {
           <div className="main-content" style={{ flex: 1, padding: '24px 28px', overflow: 'auto' }}>
             {activePage === 'dashboard'    && <Dashboard    onEdit={handleEdit} onDelete={handleDelete} />}
             {activePage === 'transactions' && <Transactions onEdit={handleEdit} onDelete={handleDelete} />}
+            {activePage === 'events'       && <Events />}
             {activePage === 'budget'       && <Budget />}
             {activePage === 'analytics'    && <Analytics />}
             {activePage === 'profile'      && <Profile />}

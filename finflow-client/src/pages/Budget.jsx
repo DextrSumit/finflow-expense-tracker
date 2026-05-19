@@ -31,7 +31,7 @@ export default function Budget() {
 
   // ── Total month expense ───────────────────────────────────────────────────
   const monthExpense = transactions
-    .filter(t => t.type === 'expense' && isCurrentMonth(t))
+    .filter(t => t.type === 'expense' && isCurrentMonth(t) && !t.eventId)
     .reduce((s, t) => s + getAmount(t), 0);
 
   const budgetPct = budgets.total > 0 ? (monthExpense / budgets.total) * 100 : 0;
@@ -110,8 +110,9 @@ export default function Budget() {
               // ── Calculate spent for this category this month ─────────────
               const catTransactions = transactions.filter(t =>
                 t.type === 'expense' &&
-                t.category === cat &&        // exact match
-                isCurrentMonth(t)            // current month only
+                t.category === cat &&
+                isCurrentMonth(t) &&
+                !t.eventId          // Approach C: event expenses excluded from budget
               );
               const spent = catTransactions.reduce((s, t) => s + getAmount(t), 0);
               const limit = budgets.cats[cat];

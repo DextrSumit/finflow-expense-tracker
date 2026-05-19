@@ -8,6 +8,7 @@ const transactionSchema = new mongoose.Schema({
   date:     { type: String, required: true },
   desc:     { type: String },
   recur:    { type: String },
+  eventId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Event', default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

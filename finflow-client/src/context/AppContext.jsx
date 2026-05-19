@@ -46,6 +46,10 @@ export function AppProvider({ children }) {
   const [transactions, setTransactions] = useState([]);
   const [txLoading, setTxLoading]       = useState(false);
 
+  // ── Event state ───────────────────────────────────────────────────────────
+  const [events, setEvents]             = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+
   // ── Budget state (localStorage) ──────────────────────────────────────────
   const [budgets, setBudgets] = useState(() => {
     try {
@@ -66,33 +70,39 @@ export function AppProvider({ children }) {
     localStorage.removeItem('ff_user');
     setCurrentUser(null);
     setTransactions([]);
+    setEvents([]);
   }, []);
 
-  // ── Fetch transactions from API when user logs in ─────────────────────────
+  // ── Fetch transactions + events from API when user logs in ────────────────
   useEffect(() => {
     if (!currentUser) {
       setTransactions([]);
+      setEvents([]);
       return;
     }
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       setTxLoading(true);
+      setEventsLoading(true);
       try {
-        const data = await api.getTransactions();
-        // If token expired or invalid, API returns { message: '...' }
-        if (!Array.isArray(data)) {
-          console.error('Unexpected response from API:', data);
-          // Token might be expired — log out cleanly
+        const [txData, evData] = await Promise.all([
+          api.getTransactions(),
+          api.getEvents(),
+        ]);
+        if (!Array.isArray(txData)) {
+          console.error('Unexpected tx response:', txData);
           logout();
           return;
         }
-        setTransactions(data);
+        setTransactions(txData);
+        if (Array.isArray(evData)) setEvents(evData);
       } catch (err) {
-        console.error('Failed to fetch transactions:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setTxLoading(false);
+        setEventsLoading(false);
       }
     };
-    fetchTransactions();
+    fetchData();
   }, [currentUser, logout]);
 
   // ── Persist budgets ───────────────────────────────────────────────────────
@@ -200,6 +210,65 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  // ── EVENTS: add ───────────────────────────────────────────────────────────
+  const addEvent = useCallback(async (data) => {
+    try {
+      const ev = await api.createEvent(data);
+      if (ev && ev._id) setEvents(prev => [ev, ...prev]);
+      return ev;
+    } catch (err) { console.error('Failed to create event:', err); }
+  }, []);
+
+  // ── EVENTS: update ────────────────────────────────────────────────────────
+  const updateEvent = useCallback(async (id, data) => {
+    try {
+      const ev = await api.updateEvent(id, data);
+      if (ev && ev._id) setEvents(prev => prev.map(e => e._id === id ? ev : e));
+      return ev;
+    } catch (err) { console.error('Failed to update event:', err); }
+  }, []);
+
+  // ── EVENTS: delete ────────────────────────────────────────────────────────
+  const deleteEvent = useCallback(async (id) => {
+    try {
+      await api.deleteEvent(id);
+      setEvents(prev => prev.filter(e => e._id !== id));
+    } catch (err) { console.error('Failed to delete event:', err); }
+  }, []);
+
+  // ── EVENTS: add expense ───────────────────────────────────────────────────
+  const addEventExpense = useCallback(async (eventId, data) => {
+    try {
+      const tx = await api.addEventExpense(eventId, data);
+      if (tx && tx._id) {
+        // Add to global transaction list so Transactions page reflects it
+        setTransactions(prev => [tx, ...prev]);
+        // Update event's spent amount in local events state
+        setEvents(prev => prev.map(e =>
+          e._id === eventId
+            ? { ...e, spent: (e.spent || 0) + (parseFloat(tx.amount) || 0) }
+            : e
+        ));
+      }
+      return tx;
+    } catch (err) { console.error('Failed to add event expense:', err); }
+  }, []);
+
+  // ── EVENTS: delete expense ────────────────────────────────────────────────
+  const deleteEventExpense = useCallback(async (eventId, txId) => {
+    try {
+      await api.deleteEventExpense(eventId, txId);
+      const tx = transactions.find(t => t._id === txId);
+      const amount = tx ? parseFloat(tx.amount) || 0 : 0;
+      setTransactions(prev => prev.filter(t => t._id !== txId));
+      setEvents(prev => prev.map(e =>
+        e._id === eventId
+          ? { ...e, spent: Math.max(0, (e.spent || 0) - amount) }
+          : e
+      ));
+    } catch (err) { console.error('Failed to delete event expense:', err); }
+  }, [transactions]);
+
   // ── BUDGETS ───────────────────────────────────────────────────────────────
   const setBudgetTotal  = useCallback((v) => setBudgets(b => ({ ...b, total: v })), []);
   const setCatBudget    = useCallback((cat, amt) => setBudgets(b => ({ ...b, cats: { ...b.cats, [cat]: amt } })), []);
@@ -226,7 +295,8 @@ export function AppProvider({ children }) {
   const totalIncome  = transactions.filter(t => t.type === 'income').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const monthIncome  = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-  const monthExpense = monthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  // ↓ Approach C: event expenses are excluded from monthly budget calculations
+  const monthExpense = monthTxs.filter(t => t.type === 'expense' && !t.eventId).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const budgetPct    = budgets.total > 0 ? (monthExpense / budgets.total) * 100 : 0;
 
   // ── CONTEXT VALUE ─────────────────────────────────────────────────────────
@@ -239,6 +309,11 @@ export function AppProvider({ children }) {
       // Transactions
       transactions, txLoading,
       addTransaction, updateTransaction, deleteTransaction,
+
+      // Events
+      events, eventsLoading,
+      addEvent, updateEvent, deleteEvent,
+      addEventExpense, deleteEventExpense,
 
       // Budgets
       budgets, setBudgetTotal, setCatBudget, deleteCatBudget,
