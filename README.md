@@ -1,8 +1,8 @@
 # FinFlow – Smart Expense Tracker
 
-> A modern, full-stack expense tracker with authentication, real-time data, and smart insights.
+> A modern, full-stack expense tracker with authentication, real-time data, smart insights, and event budget tracking.
 
-![Version](https://img.shields.io/badge/version-1.1.0-green)
+![Version](https://img.shields.io/badge/version-1.2.0-green)
 ![React](https://img.shields.io/badge/React-18-blue)
 ![Node](https://img.shields.io/badge/Node.js-Express-brightgreen)
 ![MongoDB](https://img.shields.io/badge/Database-MongoDB-green)
@@ -31,7 +31,7 @@
 - This month's summary — income, expenses, net, budget %
 - AI-powered spending insights (month-over-month, savings rate, top category)
 - Recent transactions with edit/delete
-- Category budget progress bars
+- Category budget progress bars (event expenses excluded)
 
 ### 💸 Transactions
 - Add, edit, delete transactions
@@ -39,18 +39,36 @@
 - Search by keyword
 - Filter by category, type, date range
 - Net summary bar (income / expense / net)
+- Event-tagged transactions shown with a 🎉 badge (edit locked — managed via Events page)
 - Export to **CSV**
+
+### 🎉 Event Budget (NEW in v1.2)
+- Create events — Birthday Party, Trip, Wedding, Festival, and more
+- Custom **emoji picker** (20 themed emojis) and event category
+- Set a **total event budget** with start date and optional end date (open-ended supported)
+- Add expenses to events — each expense keeps its regular category for analytics accuracy
+- Track **spent vs budget** with a live progress bar per event
+- Event status chips — **Active**, **Upcoming**, **Completed**
+- View all events in a responsive card grid with summary stats
+- Drill into any event for a full detail view — budget breakdown + expense list
+- Edit or delete events inline; expenses can be removed from the detail view
+- **Approach C isolation** — event expenses:
+  - ✅ Appear in the main Transactions list (tagged with 🎉 Event badge)
+  - ✅ Count toward your **overall balance** (real money spent)
+  - ❌ **Excluded** from monthly budget calculations
+  - ❌ **Excluded** from Budget Planner and Dashboard category bars
 
 ### 🎯 Budget Planner
 - Set total monthly budget
 - Per-category limits with live progress bars
 - Overspending alerts (amber at 80%, red at 100%)
-- Strict calendar month tracking (industry standard)
+- Strict calendar month tracking — event expenses never inflate your monthly spend
 
 ### 📈 Analytics
 - **Doughnut chart** — category-wise expenses (current month)
 - **Bar chart** — income vs expenses (last 6 months)
 - **Line chart** — spending trend over time
+- **Event expense toggle** — `All` / `No Events` segmented control to include or exclude event expenses from all charts simultaneously (default: No Events)
 - Summary stats — avg income, avg expense, best savings month
 - Export **PDF report** (browser native)
 
@@ -104,26 +122,30 @@
 finflow-client/                   ← React frontend (port 3000)
   src/
     context/
-      AppContext.jsx               # Global state — auth, transactions, budgets, theme
+      AppContext.jsx               # Global state — auth, transactions, events, budgets, theme
     components/
-      Sidebar.jsx                  # Desktop navigation
-      MobileNav.jsx                # Mobile bottom tab bar
+      Sidebar.jsx                  # Desktop navigation (includes Events)
+      MobileNav.jsx                # Mobile bottom tab bar (6-tab grid)
       UI.jsx                       # Reusable: Card, Btn, Modal, Input, Badge, etc.
-      TxItem.jsx                   # Transaction list row
+      TxItem.jsx                   # Transaction list row (with 🎉 event badge)
       TransactionModal.jsx         # Add / Edit transaction form
       AIInsights.jsx               # Auto-generated spending insight cards
+      EventCard.jsx                # Event summary card with budget progress
+      EventModal.jsx               # Create / Edit event form with emoji picker
+      EventExpenseModal.jsx        # Add expense to a specific event
     pages/
       LandingPage.jsx              # Public landing page with hero, features, about
       Dashboard.jsx                # Overview page
       Transactions.jsx             # Full transaction list with filters
+      Events.jsx                   # Events list + event detail view
       Budget.jsx                   # Budget planner (strict calendar month)
-      Analytics.jsx                # Charts + PDF export
+      Analytics.jsx                # Charts + event toggle + PDF export
       Profile.jsx                  # User profile + avatar picker + settings
       AuthPage.jsx                 # Login / Register / OTP verify screens
     hooks/
       useTransactionFilter.js      # Search, filter, sort logic
     utils/
-      api.js                       # All fetch calls to backend API
+      api.js                       # All fetch calls to backend API (incl. events)
       avatarUtils.js               # Emoji avatar options & lookup
       helpers.js                   # fmt, fmtDate, exportCSV, getLast6Months
       pdfExport.js                 # Browser-native PDF report generator
@@ -134,10 +156,12 @@ finflow-client/                   ← React frontend (port 3000)
 finflow-server/                   ← Express backend (port 5000)
   models/
     User.js                        # name, email, password, avatar, isVerified, otp
-    Transaction.js                 # type, amount, category, date, desc, recur, user
+    Transaction.js                 # type, amount, category, date, desc, recur, eventId, user
+    Event.js                       # name, emoji, category, budget, startDate, endDate, note, user
   routes/
     auth.js                        # /register, /login, /verify-otp, /resend-otp
     transactions.js                # GET, POST, PUT, DELETE /transactions
+    events.js                      # CRUD /events + nested /events/:id/expenses
     budgets.js                     # /budgets (placeholder)
     profile.js                     # GET, PUT /profile, PUT /change-password
   middleware/
@@ -217,6 +241,17 @@ npm start
 | PUT | `/api/transactions/:id` | Update transaction |
 | DELETE | `/api/transactions/:id` | Delete transaction |
 
+### Events (protected)
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/events` | Get all user events (with spent totals) |
+| POST | `/api/events` | Create new event |
+| GET | `/api/events/:id` | Get event detail with its expenses |
+| PUT | `/api/events/:id` | Update event |
+| DELETE | `/api/events/:id` | Delete event (orphans linked transactions) |
+| POST | `/api/events/:id/expenses` | Add expense to an event |
+| DELETE | `/api/events/:id/expenses/:txId` | Remove expense from an event |
+
 ### Profile (protected)
 | Method | Endpoint | Description |
 |---|---|---|
@@ -227,6 +262,17 @@ npm start
 ---
 
 ## 📋 Changelog
+
+### v1.2.0 — Event Budget System
+- ✨ Full **Event Budget** system — create events with emoji, category, budget, date range
+- ✨ Add expenses to events — tracked separately from monthly budget (Approach C isolation)
+- ✨ Event list page with status chips (Active / Upcoming / Completed) and budget progress bars
+- ✨ Event detail view — budget breakdown, expense list, inline edit/delete
+- ✨ Open-ended events supported (no end date required)
+- ✨ Event expenses visible in Transactions list with 🎉 Event badge
+- ✨ Analytics toggle — `All` / `No Events` to include or exclude event expenses from all charts
+- 🎨 New `--purple` / `--purple-light` CSS tokens for event UI accents
+- 🐛 Budget Planner & Dashboard category bars now correctly exclude event expenses
 
 ### v1.1.0 — Improved UI
 - ✨ Premium fintech-inspired landing page with hero, features, about & CTA sections
@@ -254,6 +300,8 @@ npm start
 - [ ] Shared budgets (family/couple mode)
 - [ ] Toast notifications (replace browser alerts)
 - [ ] Receipt image upload (Cloudinary)
+- [ ] Event expense editing from Events page
+- [ ] Event summary in PDF export
 
 ---
 
@@ -263,7 +311,7 @@ npm start
 - OTPs are hashed before storing (10 salt rounds)
 - OTPs expire after **10 minutes**
 - JWT tokens expire after **7 days**
-- All transaction routes verify ownership (`user: req.userId`)
+- All transaction and event routes verify ownership (`user: req.userId`)
 - `.env` file is gitignored — never commit secrets
 
 ---
