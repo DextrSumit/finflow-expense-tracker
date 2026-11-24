@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Card, Btn } from '../components/UI';
-import { fmt, getLast6Months } from '../utils/helpers';
+import { fmt, getLast6Months, parseLocalDate } from '../utils/helpers';
 import { exportPDF } from '../utils/pdfExport';
 import { FileDown } from 'lucide-react';
 import {
@@ -13,105 +13,105 @@ import { Doughnut, Bar, Line } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
-const CHART_COLORS = ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6','#0ea5e9','#ec4899','#14b8a6','#f97316','#84cc16'];
+// Neo-brutalist chart palette: lime + coral + lavender + muted tones
+const CHART_COLORS = ['#C6F135','#FF6B6B','#C8B8FA','#F59E0B','#60A5FA','#34D399','#F472B6','#A78BFA','#FB923C','#4ADE80'];
 
 export default function Analytics() {
-  const { transactions, budgets, theme } = useApp();
-  const [includeEvents, setIncludeEvents] = useState(false); // default: exclude events
-  const now    = new Date();
-  const cm     = now.getMonth(), cy = now.getFullYear();
+  const { transactions, budgets, theme, selectedMonth } = useApp();
+  const [includeEvents, setIncludeEvents] = useState(false);
+  const cm     = selectedMonth.month;
+  const cy     = selectedMonth.year;
   const months = getLast6Months();
 
-  function handleExportPDF() {
-    exportPDF(transactions, budgets, cm, cy);
-  }
+  function handleExportPDF() { exportPDF(transactions, budgets, cm, cy); }
 
   const isDark      = theme === 'dark';
-  const gridColor   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const tickColor   = isDark ? '#5a6070' : '#9aa0b0';
-  const tooltipBg   = isDark ? '#1e2130' : '#fff';
-  const tooltipText = isDark ? '#eef0f5' : '#1a1d23';
+  const gridColor   = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(23,23,23,0.06)';
+  const tickColor   = isDark ? '#5a6070' : '#888';
+  const tooltipBg   = isDark ? '#1a1a1a' : '#fff';
+  const tooltipText = isDark ? '#f0f0f0' : '#171717';
 
-  // ── Apply event filter based on toggle ──────────────────────────────────
   const filterTx = (txs) => includeEvents ? txs : txs.filter(t => !t.eventId);
 
-  // Category pie data (current month)
+  // Category pie data
   const catMap = {};
   filterTx(
-    transactions.filter(t =>
-      t.type === 'expense' &&
-      new Date(t.date).getMonth() === cm &&
-      new Date(t.date).getFullYear() === cy
-    )
-  ).forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + t.amount; });
+    transactions.filter(t => {
+      if (t.type !== 'expense') return false;
+      const d = parseLocalDate(t.date);
+      return d.getMonth() === cm && d.getFullYear() === cy;
+    })
+  ).forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + (parseFloat(t.amount) || 0); });
   const pieLabels = Object.keys(catMap);
   const pieData   = Object.values(catMap);
 
   // Bar + Line data (6 months)
   const incData = months.map(m =>
-    transactions
-      .filter(t => t.type === 'income' && new Date(t.date).getMonth() === m.month && new Date(t.date).getFullYear() === m.year)
-      .reduce((s, t) => s + t.amount, 0)
+    transactions.filter(t => {
+      if (t.type !== 'income') return false;
+      const d = parseLocalDate(t.date);
+      return d.getMonth() === m.month && d.getFullYear() === m.year;
+    }).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0)
   );
   const expData = months.map(m =>
-    filterTx(transactions)
-      .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === m.month && new Date(t.date).getFullYear() === m.year)
-      .reduce((s, t) => s + t.amount, 0)
+    filterTx(transactions).filter(t => {
+      if (t.type !== 'expense') return false;
+      const d = parseLocalDate(t.date);
+      return d.getMonth() === m.month && d.getFullYear() === m.year;
+    }).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0)
   );
 
   const commonTooltip = {
     backgroundColor: tooltipBg,
     titleColor: tooltipText,
     bodyColor: tickColor,
-    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-    borderWidth: 1,
+    borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#171717',
+    borderWidth: 1.5,
     padding: 12,
-    cornerRadius: 10,
-    callbacks: { label: ctx => ' ' + fmt(ctx.raw) }
+    cornerRadius: 4,
+    callbacks: { label: ctx => ' ' + fmt(ctx.raw) },
   };
 
   const pieTotal = pieData.reduce((s, v) => s + v, 0);
 
-  // Count event transactions in current data for the banner
-  const eventTxCount = transactions.filter(t =>
-    t.type === 'expense' && t.eventId &&
-    new Date(t.date).getMonth() === cm &&
-    new Date(t.date).getFullYear() === cy
-  ).length;
+  const eventTxCount = transactions.filter(t => {
+    if (t.type !== 'expense' || !t.eventId) return false;
+    const d = parseLocalDate(t.date);
+    return d.getMonth() === cm && d.getFullYear() === cy;
+  }).length;
 
   return (
     <div style={{ animation: 'slideUp 0.3s ease' }}>
 
-      {/* ── Header row with toggle ────────────────────────────────────────── */}
+      {/* ── Header row ──────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontSize: 13, color: 'var(--text3)' }}>
-            {now.toLocaleString('default', { month: 'long', year: 'numeric' })} · all time data below
+            {new Date(cy, cm, 1).toLocaleString('default', { month: 'long', year: 'numeric' })} · all time data below
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {/* ── Event Toggle ─────────────────────────────────────────────── */}
+          {/* Event toggle — neo-brutalist 2-block selector */}
           <div style={{
-            display: 'flex', background: 'var(--surface2)', borderRadius: 10,
-            padding: 3, border: '1px solid var(--border)', gap: 2,
+            display: 'grid', gridTemplateColumns: '1fr 1fr',
+            border: '1.5px solid var(--border)', borderRadius: 6,
+            overflow: 'hidden', boxShadow: '2px 2px 0px var(--border)',
           }}>
             {[
               { label: 'All',       value: true },
               { label: 'No Events', value: false },
-            ].map(opt => (
+            ].map((opt, idx) => (
               <button
                 key={String(opt.value)}
                 onClick={() => setIncludeEvents(opt.value)}
                 style={{
-                  padding: '6px 12px', border: 'none', borderRadius: 8,
-                  fontSize: 12, fontWeight: 600, fontFamily: 'var(--font)',
-                  cursor: 'pointer', transition: 'all 0.18s',
-                  background: includeEvents === opt.value ? 'var(--surface)' : 'transparent',
-                  color: includeEvents === opt.value
-                    ? (opt.value ? 'var(--purple)' : 'var(--blue)')
-                    : 'var(--text3)',
-                  boxShadow: includeEvents === opt.value ? 'var(--shadow)' : 'none',
+                  padding: '7px 14px', border: 'none',
+                  borderRight: idx === 0 ? '1.5px solid var(--border)' : 'none',
+                  fontSize: 12, fontWeight: 700, fontFamily: 'var(--font)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  background: includeEvents === opt.value ? 'var(--lime)' : 'var(--surface2)',
+                  color: includeEvents === opt.value ? '#171717' : 'var(--text3)',
                 }}
               >
                 {opt.label}
@@ -125,12 +125,13 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* ── Info banner when events are excluded and there are event txns ── */}
+      {/* ── Event exclusion banner ─────────────────────────────────────────── */}
       {!includeEvents && eventTxCount > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
-          background: 'var(--purple-light)', border: '1px solid rgba(139,92,246,0.2)',
-          borderRadius: 10, marginBottom: 16, fontSize: 12, color: 'var(--purple)', fontWeight: 500,
+          background: 'var(--purple-light)', border: '1.5px solid var(--purple)',
+          borderRadius: 6, marginBottom: 16, fontSize: 12, color: 'var(--purple)', fontWeight: 500,
+          boxShadow: '2px 2px 0px var(--border)',
         }}>
           <span>🎉</span>
           <span>
@@ -140,12 +141,14 @@ export default function Analytics() {
         </div>
       )}
 
-      {/* ── Top row: Doughnut + Bar ───────────────────────────────────────── */}
+      {/* ── Doughnut + Bar ────────────────────────────────────────────────── */}
       <div className="charts-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14, marginBottom: 14 }}>
 
         {/* Doughnut */}
         <Card>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Expenses by Category</div>
+          <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
+            Expenses by Category
+          </div>
           <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>
             This month · {fmt(pieTotal)}
             {!includeEvents && <span style={{ color: 'var(--purple)', marginLeft: 6 }}>· no events</span>}
@@ -157,7 +160,13 @@ export default function Analytics() {
                 <Doughnut
                   data={{
                     labels: pieLabels,
-                    datasets: [{ data: pieData, backgroundColor: CHART_COLORS.slice(0, pieLabels.length), borderWidth: 2, borderColor: isDark ? '#161920' : '#fff', hoverOffset: 6 }]
+                    datasets: [{
+                      data: pieData,
+                      backgroundColor: CHART_COLORS.slice(0, pieLabels.length),
+                      borderWidth: 2,
+                      borderColor: isDark ? '#161616' : '#fff',
+                      hoverOffset: 6,
+                    }]
                   }}
                   options={{
                     responsive: true, maintainAspectRatio: false, cutout: '65%',
@@ -179,15 +188,17 @@ export default function Analytics() {
 
         {/* Bar */}
         <Card>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Income vs Expenses</div>
+          <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
+            Income vs Expenses
+          </div>
           <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>
             Last 6 months
             {!includeEvents && <span style={{ color: 'var(--purple)', marginLeft: 6 }}>· no events</span>}
           </div>
           <div style={{ display: 'flex', gap: 14, marginBottom: 14 }}>
-            {[{ color: '#10b981', label: 'Income' }, { color: '#f43f5e', label: 'Expenses' }].map(x => (
+            {[{ color: '#C6F135', label: 'Income' }, { color: '#FF6B6B', label: 'Expenses' }].map(x => (
               <span key={x.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text2)' }}>
-                <span style={{ width: 10, height: 10, borderRadius: 2, background: x.color }} />{x.label}
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: x.color, border: '1px solid var(--border-soft)' }} />{x.label}
               </span>
             ))}
           </div>
@@ -196,8 +207,8 @@ export default function Analytics() {
               data={{
                 labels: months.map(m => m.label),
                 datasets: [
-                  { label: 'Income',   data: incData, backgroundColor: 'rgba(16, 185, 129, 0.85)', borderRadius: 6, borderSkipped: false },
-                  { label: 'Expenses', data: expData, backgroundColor: 'rgba(244, 63, 94, 0.85)',  borderRadius: 6, borderSkipped: false },
+                  { label: 'Income',   data: incData, backgroundColor: 'rgba(198,241,53,0.85)', borderRadius: 4, borderSkipped: false },
+                  { label: 'Expenses', data: expData, backgroundColor: 'rgba(255,107,107,0.85)', borderRadius: 4, borderSkipped: false },
                 ]
               }}
               options={{
@@ -213,9 +224,11 @@ export default function Analytics() {
         </Card>
       </div>
 
-      {/* ── Line chart ───────────────────────────────────────────────────── */}
+      {/* ── Line chart ─────────────────────────────────────────────────────── */}
       <Card>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Spending Trend</div>
+        <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
+          Spending Trend
+        </div>
         <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16 }}>
           Monthly expense trend over 6 months
           {!includeEvents && <span style={{ color: 'var(--purple)', marginLeft: 6 }}>· excl. events</span>}
@@ -226,8 +239,12 @@ export default function Analytics() {
               labels: months.map(m => m.label),
               datasets: [{
                 label: 'Expenses', data: expData,
-                borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.1)',
-                fill: true, tension: 0.45, pointBackgroundColor: '#f43f5e', pointRadius: 5, pointHoverRadius: 7,
+                borderColor: '#FF6B6B', backgroundColor: 'rgba(255,107,107,0.08)',
+                fill: true, tension: 0.4,
+                pointBackgroundColor: '#FF6B6B',
+                pointBorderColor: '#171717',
+                pointBorderWidth: 1.5,
+                pointRadius: 5, pointHoverRadius: 7,
               }]
             }}
             options={{
@@ -242,7 +259,7 @@ export default function Analytics() {
         </div>
       </Card>
 
-      {/* ── Summary stats ────────────────────────────────────────────────── */}
+      {/* ── Summary stats ──────────────────────────────────────────────────── */}
       <div className="cards-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 14 }}>
         {[
           { label: 'Avg Monthly Income',  value: fmt(incData.reduce((s, v) => s + v, 0) / 6) },
@@ -253,9 +270,17 @@ export default function Analytics() {
             return months[idx]?.label || '—';
           })() },
         ].map(s => (
-          <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{s.value}</div>
+          <div key={s.label} style={{
+            background: 'var(--surface)', border: '1.5px solid var(--border)',
+            borderRadius: 8, padding: '14px 16px',
+            boxShadow: '3px 3px 0px var(--border)',
+          }}>
+            <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              {s.label}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>
+              {s.value}
+            </div>
           </div>
         ))}
       </div>

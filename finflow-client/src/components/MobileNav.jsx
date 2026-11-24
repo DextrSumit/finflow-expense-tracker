@@ -14,30 +14,41 @@ const NAV = [
 export default function MobileNav() {
   const { activePage, setActivePage } = useApp();
   return (
-    <nav style={{
-      display: 'none',
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-      background: 'var(--surface)', borderTop: '1px solid var(--border)',
-      padding: '8px 0 env(safe-area-inset-bottom, 8px)',
-      gridTemplateColumns: 'repeat(6, 1fr)',
-    }}
+    <nav
       className="mobile-nav"
+      style={{
+        display: 'none',
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
+        background: 'var(--surface)',
+        borderTop: '2px solid var(--border)',
+        padding: '6px 0 env(safe-area-inset-bottom, 6px)',
+        gridTemplateColumns: 'repeat(6, 1fr)',
+      }}
     >
       {NAV.map(({ id, icon: Icon, label }) => {
         const active = activePage === id;
         return (
-          <button key={id} onClick={() => setActivePage(id)} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-            padding: '6px 0', border: 'none', background: 'transparent', cursor: 'pointer',
-            color: active ? 'var(--blue)' : 'var(--text3)', fontFamily: 'var(--font)',
-            fontSize: 11, fontWeight: active ? 600 : 500, transition: 'all 0.2s ease',
-          }}
+          <button
+            key={id}
+            onClick={() => setActivePage(id)}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              padding: '5px 0', border: 'none', background: 'transparent', cursor: 'pointer',
+              color: active ? '#171717' : 'var(--text3)',
+              fontFamily: 'var(--font)', fontSize: 10, fontWeight: active ? 700 : 500,
+              transition: 'all 0.12s ease',
+            }}
           >
             <div style={{
-              padding: '4px 12px', borderRadius: 16, background: active ? 'var(--blue-light)' : 'transparent',
-              transition: 'background 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              padding: '5px 10px',
+              borderRadius: 'var(--radius-sm)',
+              background: active ? 'var(--lime)' : 'transparent',
+              border: active ? '1.5px solid var(--border)' : '1.5px solid transparent',
+              transition: 'all 0.12s ease',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: active ? 'var(--shadow-sm)' : 'none',
             }}>
-              <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+              <Icon size={19} strokeWidth={active ? 2.5 : 2} />
             </div>
             {label}
           </button>

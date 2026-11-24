@@ -47,9 +47,9 @@ export default function EventExpenseModal({ open, onClose, eventId, eventName })
       {/* Info banner */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
-        background: 'var(--purple-light)', borderRadius: 10, marginBottom: 18,
-        fontSize: 13, color: 'var(--purple)', fontWeight: 500,
-        border: '1px solid rgba(139,92,246,0.2)',
+        background: 'var(--purple-light)', borderRadius: 6, marginBottom: 18,
+        fontSize: 12.5, color: 'var(--purple)', fontWeight: 600,
+        border: '1.5px solid var(--purple)', boxShadow: '2px 2px 0px var(--border)',
       }}>
         <span>🎉</span>
         <span>This expense will be tracked against the event budget and excluded from your monthly budget.</span>
@@ -98,7 +98,7 @@ export default function EventExpenseModal({ open, onClose, eventId, eventName })
         <Btn
           onClick={handleSave}
           variant="primary"
-          style={{ flex: 1, background: 'var(--purple)', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }}
+          style={{ flex: 1 }}
           disabled={saving}
         >
           {saving ? 'Saving…' : 'Add Expense'}

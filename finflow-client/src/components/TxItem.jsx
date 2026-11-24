@@ -1,8 +1,8 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Btn, Badge } from './UI';
+import { Badge } from './UI';
 import { fmt, fmtDate } from '../utils/helpers';
-import { Edit2, Trash2, Lock } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 
 export default function TxItem({ tx, onEdit, onDelete }) {
   const { getCatMeta } = useApp();
@@ -10,77 +10,99 @@ export default function TxItem({ tx, onEdit, onDelete }) {
   const isIncome = tx.type === 'income';
 
   return (
-    <div className="tx-item" style={{
-      display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px',
-      borderBottom: '1px solid var(--border)', animation: 'fadeIn 0.2s ease',
-      borderRadius: 'var(--radius-sm)', transition: 'all 0.2s ease',
-      margin: '0 -8px'
-    }}
-    onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
-    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'none'; }}
+    <div
+      className="tx-item"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14, padding: '12px 10px',
+        borderBottom: '1px solid var(--border-soft)', animation: 'fadeIn 0.2s ease',
+        borderRadius: 6, transition: 'all 0.15s ease', margin: '0 -6px',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
     >
-      <div className="tx-icon" style={{
-        width: 44, height: 44, borderRadius: 12, background: isIncome ? 'var(--green-light)' : 'var(--red-light)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
-      }}>{meta.icon}</div>
+      {/* Category icon — square neo-brutalist box */}
+      <div style={{
+        width: 42, height: 42, borderRadius: 6, flexShrink: 0,
+        background: isIncome ? 'var(--lime-light)' : 'var(--red-light)',
+        border: `1.5px solid ${isIncome ? 'var(--lime)' : 'var(--red)'}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 18,
+      }}>
+        {meta.icon}
+      </div>
 
+      {/* Description + sub */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="tx-title" style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: 'var(--text)' }}>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220, letterSpacing: '-0.01em' }}>
+        <div style={{
+          fontSize: 14, fontWeight: 600, color: 'var(--text)',
+          display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap',
+        }}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
             {tx.desc || tx.category}
           </span>
           {tx.recur   && <Badge color="var(--blue)"   bg="var(--blue-light)">↻ {tx.recur}</Badge>}
           {tx.eventId && <Badge color="var(--purple)" bg="var(--purple-light)">🎉 Event</Badge>}
         </div>
-        <div className="tx-sub" style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4, fontWeight: 500 }}>
-          {tx.desc ? `${tx.category} • ` : ''}{fmtDate(tx.date)}
+        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>
+          {tx.desc ? `${tx.category} · ` : ''}{fmtDate(tx.date)}
         </div>
       </div>
 
-      <div className="tx-amount" style={{
-        fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, letterSpacing: '-0.02em',
-        color: isIncome ? 'var(--green)' : 'var(--text)',
+      {/* Amount — bold mono, high-contrast green for income, coral for expense */}
+      <div style={{
+        fontSize: 16, fontWeight: 800, fontFamily: 'var(--font-mono)',
+        flexShrink: 0, letterSpacing: '-0.02em',
+        color: isIncome ? 'var(--green)' : 'var(--red)',
       }}>
         {isIncome ? '+' : '−'}{fmt(tx.amount)}
       </div>
 
-      <div className="tx-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 8 }}>
-        {/* Edit button — disabled for event expenses with tooltip */}
-        {tx.eventId ? (
-          <div title="Edit from the Events page" style={{ display: 'flex', alignItems: 'center' }}>
-            <button className="tx-edit-btn" disabled style={{
-              width: 32, height: 32, border: 'none', borderRadius: 8,
-              background: 'transparent', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--border2)', opacity: 0.5,
-            }}>
-              <Lock size={13} />
-            </button>
-          </div>
-        ) : (
-          <button className="tx-edit-btn" onClick={() => onEdit(tx)} style={{
-            width: 32, height: 32, border: 'none', borderRadius: 8,
-            background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--text3)', transition: 'all 0.2s ease'
+      {/* Action buttons — square, bordered */}
+      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+        <button
+          onClick={() => onEdit(tx)}
+          title="Edit"
+          style={{
+            width: 30, height: 30, borderRadius: 6, border: '1.5px solid var(--border-soft)',
+            background: 'transparent', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--text3)', transition: 'all 0.15s ease',
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--green-light)'; e.currentTarget.style.color = 'var(--green)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.transform = 'none'; }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
-          >
-            <Edit2 size={14} />
-          </button>
-        )}
-
-        {/* Delete button — uses tx._id (MongoDB) with fallback to tx.id (localStorage) */}
-        <button onClick={() => onDelete(tx._id || tx.id)} style={{
-          width: 32, height: 32, border: 'none', borderRadius: 8,
-          background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'var(--text3)', transition: 'all 0.2s ease'
-        }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--red-light)'; e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.transform = 'none'; }}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--lime-light)';
+            e.currentTarget.style.borderColor = 'var(--lime)';
+            e.currentTarget.style.color = '#555';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = 'var(--border-soft)';
+            e.currentTarget.style.color = 'var(--text3)';
+          }}
         >
-          <Trash2 size={14} />
+          <Edit2 size={13} />
+        </button>
+
+        <button
+          onClick={() => onDelete(tx._id || tx.id)}
+          title="Delete"
+          style={{
+            width: 30, height: 30, borderRadius: 6, border: '1.5px solid var(--border-soft)',
+            background: 'transparent', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--text3)', transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--red-light)';
+            e.currentTarget.style.borderColor = 'var(--red)';
+            e.currentTarget.style.color = 'var(--red)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = 'var(--border-soft)';
+            e.currentTarget.style.color = 'var(--text3)';
+          }}
+        >
+          <Trash2 size={13} />
         </button>
       </div>
     </div>

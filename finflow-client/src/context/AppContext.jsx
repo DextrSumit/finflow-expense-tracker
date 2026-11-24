@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
+import { parseLocalDate } from '../utils/helpers';
 
 const AppContext = createContext(null);
 
@@ -50,10 +51,17 @@ export function AppProvider({ children }) {
   const [events, setEvents]             = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
 
-  // ── Budget state (localStorage) ──────────────────────────────────────────
+  // ── Budget state (scoped to user in localStorage) ────────────────────────
+  const getBudgetStorageKey = useCallback((user) => {
+    const id = user?.id || user?._id || user?.email;
+    return id ? `ff_budgets_${id}` : 'ff_budgets';
+  }, []);
+
   const [budgets, setBudgets] = useState(() => {
     try {
-      const s = localStorage.getItem('ff_budgets');
+      const u = JSON.parse(localStorage.getItem('ff_user'));
+      const key = u?.id || u?._id || u?.email ? `ff_budgets_${u.id || u._id || u.email}` : 'ff_budgets';
+      const s = localStorage.getItem(key) || localStorage.getItem('ff_budgets');
       return s ? JSON.parse(s) : {
         total: 50000,
         cats: { Food: 5000, Rent: 15000, Shopping: 6000, Entertainment: 3000, Bills: 4000, Health: 3500 }
@@ -63,6 +71,29 @@ export function AppProvider({ children }) {
 
   const [theme, setTheme]           = useState(() => localStorage.getItem('ff_theme') || 'light');
   const [activePage, setActivePage] = useState('dashboard');
+
+  // ── Selected month for month navigator ───────────────────────────────────
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const n = new Date();
+    return { month: n.getMonth(), year: n.getFullYear() };
+  });
+
+  const goToPrevMonth = useCallback(() => {
+    setSelectedMonth(sm => {
+      if (sm.month === 0) return { month: 11, year: sm.year - 1 };
+      return { month: sm.month - 1, year: sm.year };
+    });
+  }, []);
+
+  const goToNextMonth = useCallback(() => {
+    const now = new Date();
+    setSelectedMonth(sm => {
+      // Don't allow going past current month
+      if (sm.year === now.getFullYear() && sm.month === now.getMonth()) return sm;
+      if (sm.month === 11) return { month: 0, year: sm.year + 1 };
+      return { month: sm.month + 1, year: sm.year };
+    });
+  }, []);
 
   // ── logout defined early so fetchTransactions can use it ─────────────────
   const logout = useCallback(() => {
@@ -88,13 +119,19 @@ export function AppProvider({ children }) {
           api.getTransactions(),
           api.getEvents(),
         ]);
-        if (!Array.isArray(txData)) {
-          console.error('Unexpected tx response:', txData);
+        if (Array.isArray(txData)) {
+          setTransactions(txData);
+        } else if (txData?.message && (txData.message.toLowerCase().includes('token') || txData.message.toLowerCase().includes('access denied'))) {
+          console.warn('Session expired or unauthorized:', txData.message);
           logout();
           return;
+        } else {
+          console.error('Failed to load transactions:', txData?.message || txData);
         }
-        setTransactions(txData);
-        if (Array.isArray(evData)) setEvents(evData);
+
+        if (Array.isArray(evData)) {
+          setEvents(evData);
+        }
       } catch (err) {
         console.error('Failed to fetch data:', err);
       } finally {
@@ -105,10 +142,22 @@ export function AppProvider({ children }) {
     fetchData();
   }, [currentUser, logout]);
 
+  // ── Sync user-specific budgets when currentUser switches ─────────────────
+  useEffect(() => {
+    if (currentUser) {
+      const key = getBudgetStorageKey(currentUser);
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try { setBudgets(JSON.parse(saved)); } catch {}
+      }
+    }
+  }, [currentUser, getBudgetStorageKey]);
+
   // ── Persist budgets ───────────────────────────────────────────────────────
   useEffect(() => {
-    localStorage.setItem('ff_budgets', JSON.stringify(budgets));
-  }, [budgets]);
+    const key = getBudgetStorageKey(currentUser);
+    localStorage.setItem(key, JSON.stringify(budgets));
+  }, [budgets, currentUser, getBudgetStorageKey]);
 
   // ── Persist theme ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -138,29 +187,38 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  // ── AUTH: set session directly from response data ─────────────────────────
+  const setAuthSession = useCallback(async (data) => {
+    if (!data || !data.token) return false;
+    localStorage.setItem('ff_token', data.token);
+    localStorage.setItem('ff_user', JSON.stringify(data.user));
+    setCurrentUser(data.user);
+
+    try {
+      const profile = await api.getProfile();
+      if (profile && profile.user) {
+        const fresh = { ...data.user, avatar: profile.user.avatar, name: profile.user.name };
+        localStorage.setItem('ff_user', JSON.stringify(fresh));
+        setCurrentUser(fresh);
+      }
+    } catch {}
+    return true;
+  }, []);
+
   // ── AUTH: login ───────────────────────────────────────────────────────────
   const login = useCallback(async (email, password) => {
     setAuthLoading(true);
     setAuthError('');
     try {
       const data = await api.login({ email, password });
+      if (data.needsVerification) {
+        return data;
+      }
       if (data.message && !data.token) {
         setAuthError(data.message);
         return false;
       }
-      localStorage.setItem('ff_token', data.token);
-      localStorage.setItem('ff_user', JSON.stringify(data.user));
-      setCurrentUser(data.user);
-
-      try {
-      const profile = await api.getProfile();
-      if (profile.user) {
-        const fresh = { ...data.user, avatar: profile.user.avatar, name: profile.user.name };
-        localStorage.setItem('ff_user', JSON.stringify(fresh));
-        setCurrentUser(fresh);
-      }
-    } catch {}
-    
+      await setAuthSession(data);
       return true;
     } catch {
       setAuthError('Login failed. Please try again.');
@@ -168,7 +226,7 @@ export function AppProvider({ children }) {
     } finally {
       setAuthLoading(false);
     }
-  }, []);
+  }, [setAuthSession]);
 
   // ── TRANSACTIONS: add ─────────────────────────────────────────────────────
   const addTransaction = useCallback(async (tx) => {
@@ -285,10 +343,11 @@ export function AppProvider({ children }) {
   const curMonth = now.getMonth();
   const curYear  = now.getFullYear();
 
+  // monthTxs uses selectedMonth so all pages react to the month navigator
   const monthTxs = transactions.filter(t => {
     try {
-      const d = new Date(t.date);
-      return d.getMonth() === curMonth && d.getFullYear() === curYear;
+      const d = parseLocalDate(t.date);
+      return d.getMonth() === selectedMonth.month && d.getFullYear() === selectedMonth.year;
     } catch { return false; }
   });
 
@@ -297,14 +356,16 @@ export function AppProvider({ children }) {
   const monthIncome  = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   // ↓ Approach C: event expenses are excluded from monthly budget calculations
   const monthExpense = monthTxs.filter(t => t.type === 'expense' && !t.eventId).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-  const budgetPct    = budgets.total > 0 ? (monthExpense / budgets.total) * 100 : 0;
+  const catTotal     = Object.values(budgets?.cats || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+  const effectiveTotal = catTotal > 0 ? catTotal : (parseFloat(budgets?.total) || 0);
+  const budgetPct    = effectiveTotal > 0 ? (monthExpense / effectiveTotal) * 100 : 0;
 
   // ── CONTEXT VALUE ─────────────────────────────────────────────────────────
   return (
     <AppContext.Provider value={{
       // Auth
       currentUser, setCurrentUser, authLoading, authError,
-      register, login, logout,
+      register, login, logout, setAuthSession,
 
       // Transactions
       transactions, txLoading,
@@ -321,6 +382,8 @@ export function AppProvider({ children }) {
       // UI
       theme, toggleTheme,
       activePage, setActivePage,
+      selectedMonth, setSelectedMonth, goToPrevMonth, goToNextMonth,
+      curMonth, curYear,
 
       // Helpers
       CATEGORIES, ALL_CATEGORIES, getCatMeta,

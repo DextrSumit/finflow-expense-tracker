@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
 
 export default function AuthPage({ defaultScreen = 'login', onBackToHome }) {
-  const { login } = useApp();
+  const { login, setAuthSession } = useApp();
 
   const [screen, setScreen]             = useState(defaultScreen);
   const [pendingEmail, setPendingEmail] = useState('');
@@ -27,33 +27,24 @@ export default function AuthPage({ defaultScreen = 'login', onBackToHome }) {
         if (data.email) {
           setPendingEmail(data.email);
           setMessage('A 6-digit code has been sent to ' + data.email);
-          setScreen('verify');
-          setOtp('');
+          setScreen('verify'); setOtp('');
         } else {
           setError(data.message || 'Registration failed.');
         }
       } else if (screen === 'login') {
-        const data = await api.login({ email, password });
-        if (data.needsVerification) {
-          setPendingEmail(data.email);
-          setMessage('Your email is not verified. Enter the OTP sent to ' + data.email);
-          setScreen('verify');
-          setOtp('');
-        } else if (data.token) {
-          await login(email, password);
-        } else {
-          setError(data.message || 'Login failed.');
+        const res = await login(email, password);
+        if (res && res.needsVerification) {
+          setPendingEmail(res.email || email);
+          setMessage('Your email is not verified. Enter the OTP sent to ' + (res.email || email));
+          setScreen('verify'); setOtp('');
+        } else if (res === false) {
+          setError('Login failed. Please check your credentials.');
         }
       } else if (screen === 'verify') {
         if (otp.length !== 6) { setError('Please enter the 6-digit code.'); setLoading(false); return; }
         const data = await api.verifyOTP({ email: pendingEmail, otp });
-        if (data.token) {
-          localStorage.setItem('ff_token', data.token);
-          localStorage.setItem('ff_user', JSON.stringify(data.user));
-          window.location.reload();
-        } else {
-          setError(data.message || 'Invalid OTP.');
-        }
+        if (data.token) { await setAuthSession(data); }
+        else { setError(data.message || 'Invalid OTP.'); }
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -75,35 +66,56 @@ export default function AuthPage({ defaultScreen = 'login', onBackToHome }) {
     }
   }
 
-  const s = {
-    page: {
-      minHeight: '100vh', background: 'var(--bg)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-    },
-    card: {
-      background: 'var(--surface)', border: '1px solid var(--border)',
-      borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 420,
-      boxShadow: 'var(--shadow-lg)', animation: 'scaleIn 0.25s ease',
-    },
-    logo: { fontSize: 26, fontWeight: 700, textAlign: 'center', marginBottom: 6 },
-    subtitle: { fontSize: 14, color: 'var(--text3)', textAlign: 'center', marginBottom: 28 },
-    label: { display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 5 },
-    input: { width: '100%', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--surface2)', color: 'var(--text)', fontSize: 14, fontFamily: 'var(--font)', outline: 'none', marginBottom: 16, boxSizing: 'border-box', transition: 'all 0.2s ease' },
-    otpInput: { width: '100%', padding: '14px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--surface2)', color: 'var(--text)', fontSize: 28, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '12px', textAlign: 'center', outline: 'none', marginBottom: 16, boxSizing: 'border-box', transition: 'all 0.2s ease' },
-    btn: { width: '100%', padding: '14px', background: loading ? 'var(--blue-light)' : 'var(--blue)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: 'var(--font)', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.8 : 1, marginTop: 8, transition: 'all 0.2s ease', boxShadow: '0 4px 14px var(--blue-light)' },
-    error: { background: 'rgba(255,112,67,0.1)', border: '1px solid rgba(255,112,67,0.3)', color: 'var(--red)', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 14 },
-    success: { background: 'rgba(76,175,80,0.1)', border: '1px solid rgba(76,175,80,0.25)', color: 'var(--green)', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 14 },
-    toggle: { textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--text3)' },
-    toggleBtn: { background: 'none', border: 'none', color: 'var(--blue)', fontWeight: 600, cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font)', marginLeft: 4 },
-    backBtn: { background: 'none', border: 'none', color: 'var(--text3)', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font)', display: 'block', margin: '14px auto 0', textDecoration: 'underline' },
-    emailBadge: { background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 14px', fontSize: 13, color: 'var(--text2)', textAlign: 'center', marginBottom: 16, fontWeight: 500 },
-    resendRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14, fontSize: 13, color: 'var(--text3)' },
-    resendBtn: { background: 'none', border: 'none', color: 'var(--blue)', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font)' },
+  // ── Shared style helpers ─────────────────────────────────────────────────
+  const inputStyle = {
+    width: '100%', padding: '12px 14px',
+    border: '1.5px solid var(--border)', borderRadius: 6,
+    background: 'var(--surface2)', color: 'var(--text)',
+    fontSize: 14, fontFamily: 'var(--font)', outline: 'none',
+    marginBottom: 14, boxSizing: 'border-box',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+  };
+
+  const labelStyle = {
+    display: 'block', fontSize: 11, fontWeight: 700,
+    color: 'var(--text3)', textTransform: 'uppercase',
+    letterSpacing: '0.06em', marginBottom: 5,
+  };
+
+  const btnStyle = {
+    width: '100%', padding: '13px',
+    background: loading ? 'var(--border-soft)' : 'var(--lime)',
+    color: '#171717',
+    border: '1.5px solid var(--border)', borderRadius: 6,
+    fontSize: 15, fontWeight: 700, fontFamily: 'var(--font)',
+    cursor: loading ? 'not-allowed' : 'pointer',
+    opacity: loading ? 0.75 : 1, marginTop: 8,
+    transition: 'all 0.15s',
+    boxShadow: loading ? 'none' : '3px 3px 0px var(--border)',
+  };
+
+  const errorStyle = {
+    background: 'var(--red-light)', border: '1.5px solid var(--red)',
+    color: 'var(--red)', borderRadius: 6, padding: '10px 14px',
+    fontSize: 13, marginBottom: 14,
+  };
+
+  const successStyle = {
+    background: 'var(--lime-light)', border: '1.5px solid var(--lime)',
+    color: '#3a5c00', borderRadius: 6, padding: '10px 14px',
+    fontSize: 13, marginBottom: 14,
   };
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
+    <div style={{
+      minHeight: '100vh', background: 'var(--bg)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+    }}>
+      <div style={{
+        background: 'var(--surface)', border: '2px solid var(--border)',
+        borderRadius: 8, padding: '36px 32px', width: '100%', maxWidth: 420,
+        boxShadow: '6px 6px 0px var(--border)', animation: 'scaleIn 0.25s ease',
+      }}>
 
         {/* Back to home */}
         {onBackToHome && screen !== 'verify' && (
@@ -117,86 +129,149 @@ export default function AuthPage({ defaultScreen = 'login', onBackToHome }) {
         )}
 
         {/* Logo */}
-        <div style={s.logo}>
-          <span style={{ color: 'var(--blue)' }}>Fin</span>
-          <span style={{ color: 'var(--text)' }}>Flow</span>
+        <div style={{ fontSize: 26, fontWeight: 800, textAlign: 'center', marginBottom: 6, letterSpacing: '-0.02em' }}>
+          <span style={{ color: 'var(--text)' }}>Fin</span>
+          <span style={{
+            color: '#171717', background: 'var(--lime)',
+            padding: '0 6px', borderRadius: 4,
+            border: '1.5px solid var(--border)',
+          }}>Flow</span>
         </div>
 
-        {/* ── VERIFY SCREEN ─────────────────────────────────────────────── */}
+        {/* ── VERIFY SCREEN ─────────────────────────────────────────────────── */}
         {screen === 'verify' && (
           <>
-            <div style={s.subtitle}>Check your email for the code</div>
-            <div style={s.emailBadge}>📧 {pendingEmail}</div>
-            {error   && <div style={s.error}>⚠ {error}</div>}
-            {message && <div style={s.success}>✓ {message}</div>}
+            <div style={{ fontSize: 14, color: 'var(--text3)', textAlign: 'center', marginBottom: 20 }}>
+              Check your email for the code
+            </div>
+            <div style={{
+              background: 'var(--surface2)', border: '1.5px solid var(--border)',
+              borderRadius: 6, padding: '8px 14px', fontSize: 13,
+              color: 'var(--text2)', textAlign: 'center', marginBottom: 16,
+            }}>
+              📧 {pendingEmail}
+            </div>
+            {error   && <div style={errorStyle}>⚠ {error}</div>}
+            {message && <div style={successStyle}>✓ {message}</div>}
             <form onSubmit={handleSubmit}>
-              <label style={s.label}>6-Digit Verification Code</label>
-              <input style={s.otpInput} type="text" inputMode="numeric" maxLength={6}
+              <label style={labelStyle}>6-Digit Verification Code</label>
+              <input
+                style={{
+                  ...inputStyle,
+                  fontSize: 28, fontFamily: 'var(--font-mono)', fontWeight: 700,
+                  letterSpacing: '10px', textAlign: 'center',
+                }}
+                type="text" inputMode="numeric" maxLength={6}
                 placeholder="——————" value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} autoFocus required />
-              <button type="submit" style={s.btn} disabled={loading}
-                onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-2px)' }}
-                onMouseLeave={e => { if (!loading) e.currentTarget.style.transform = 'none' }}
+                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                autoFocus required
+                onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+              />
+              <button type="submit" style={btnStyle} disabled={loading}
+                onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = '4px 4px 0px var(--border)'; } }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '3px 3px 0px var(--border)'; }}
               >
                 {loading ? 'Verifying...' : 'Verify Email'}
               </button>
             </form>
-            <div style={s.resendRow}>
-              Didn't get the code?
-              <button style={s.resendBtn} onClick={handleResend} disabled={loading}>Resend OTP</button>
+            <div style={{ textAlign: 'center', marginTop: 14, fontSize: 13, color: 'var(--text3)' }}>
+              Didn't get the code?{' '}
+              <button
+                style={{ background: 'none', border: 'none', color: 'var(--text)', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font)', textDecoration: 'underline' }}
+                onClick={handleResend} disabled={loading}
+              >Resend OTP</button>
             </div>
-            <button style={s.backBtn} onClick={() => { setScreen('login'); setError(''); setMessage(''); setOtp(''); }}>
+            <button
+              style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font)', display: 'block', margin: '14px auto 0', textDecoration: 'underline' }}
+              onClick={() => { setScreen('login'); setError(''); setMessage(''); setOtp(''); }}
+            >
               ← Back to Login
             </button>
           </>
         )}
 
-        {/* ── LOGIN SCREEN ──────────────────────────────────────────────── */}
+        {/* ── LOGIN SCREEN ──────────────────────────────────────────────────── */}
         {screen === 'login' && (
           <>
-            <div style={s.subtitle}>Welcome back! Log in to continue.</div>
-            {error && <div style={s.error}>⚠ {error}</div>}
+            <div style={{ fontSize: 14, color: 'var(--text3)', textAlign: 'center', marginBottom: 24 }}>
+              Welcome back! Log in to continue.
+            </div>
+            {error && <div style={errorStyle}>⚠ {error}</div>}
             <form onSubmit={handleSubmit}>
-              <label style={s.label}>Email Address</label>
-              <input style={s.input} type="email" placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
-              <label style={s.label}>Password</label>
-              <input style={s.input} type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
-              <button type="submit" style={s.btn} disabled={loading}
-                onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-2px)' }}
-                onMouseLeave={e => { if (!loading) e.currentTarget.style.transform = 'none' }}
+              <label style={labelStyle}>Email Address</label>
+              <input
+                style={inputStyle} type="email" placeholder="john@example.com"
+                value={email} onChange={e => setEmail(e.target.value)} required
+                onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+              />
+              <label style={labelStyle}>Password</label>
+              <input
+                style={inputStyle} type="password" placeholder="Enter your password"
+                value={password} onChange={e => setPassword(e.target.value)} required
+                onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+              />
+              <button type="submit" style={btnStyle} disabled={loading}
+                onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = '4px 4px 0px var(--border)'; } }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '3px 3px 0px var(--border)'; }}
               >
                 {loading ? 'Logging in...' : 'Log In'}
               </button>
             </form>
-            <div style={s.toggle}>
-              Don't have an account?
-              <button style={s.toggleBtn} onClick={() => { setScreen('register'); setError(''); }}>Sign Up</button>
+            <div style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--text3)' }}>
+              Don't have an account?{' '}
+              <button
+                style={{ background: 'none', border: 'none', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font)', textDecoration: 'underline' }}
+                onClick={() => { setScreen('register'); setError(''); }}
+              >Sign Up</button>
             </div>
           </>
         )}
 
-        {/* ── REGISTER SCREEN ───────────────────────────────────────────── */}
+        {/* ── REGISTER SCREEN ───────────────────────────────────────────────── */}
         {screen === 'register' && (
           <>
-            <div style={s.subtitle}>Create your free account.</div>
-            {error && <div style={s.error}>⚠ {error}</div>}
+            <div style={{ fontSize: 14, color: 'var(--text3)', textAlign: 'center', marginBottom: 24 }}>
+              Create your free account.
+            </div>
+            {error && <div style={errorStyle}>⚠ {error}</div>}
             <form onSubmit={handleSubmit}>
-              <label style={s.label}>Full Name</label>
-              <input style={s.input} type="text" placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} required />
-              <label style={s.label}>Email Address</label>
-              <input style={s.input} type="email" placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
-              <label style={s.label}>Password</label>
-              <input style={s.input} type="password" placeholder="Min. 6 characters" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
-              <button type="submit" style={s.btn} disabled={loading}
-                onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-2px)' }}
-                onMouseLeave={e => { if (!loading) e.currentTarget.style.transform = 'none' }}
+              <label style={labelStyle}>Full Name</label>
+              <input
+                style={inputStyle} type="text" placeholder="John Doe"
+                value={name} onChange={e => setName(e.target.value)} required
+                onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+              />
+              <label style={labelStyle}>Email Address</label>
+              <input
+                style={inputStyle} type="email" placeholder="john@example.com"
+                value={email} onChange={e => setEmail(e.target.value)} required
+                onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+              />
+              <label style={labelStyle}>Password</label>
+              <input
+                style={inputStyle} type="password" placeholder="Min. 6 characters"
+                value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
+                onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+                onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+              />
+              <button type="submit" style={btnStyle} disabled={loading}
+                onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = '4px 4px 0px var(--border)'; } }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '3px 3px 0px var(--border)'; }}
               >
                 {loading ? 'Creating account...' : 'Create Account'}
               </button>
             </form>
-            <div style={s.toggle}>
-              Already have an account?
-              <button style={s.toggleBtn} onClick={() => { setScreen('login'); setError(''); }}>Log In</button>
+            <div style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--text3)' }}>
+              Already have an account?{' '}
+              <button
+                style={{ background: 'none', border: 'none', color: 'var(--text)', fontWeight: 700, cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font)', textDecoration: 'underline' }}
+                onClick={() => { setScreen('login'); setError(''); }}
+              >Log In</button>
             </div>
           </>
         )}

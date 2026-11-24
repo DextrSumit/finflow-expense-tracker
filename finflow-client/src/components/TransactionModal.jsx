@@ -23,9 +23,7 @@ export default function TransactionModal({ open, onClose, editTx }) {
       return alert('Please fill in all required fields.');
     }
     const tx = { ...form, amount };
-
     if (editTx) {
-      // ── FIX: use _id (MongoDB) with fallback to id (localStorage) ────────
       updateTransaction(editTx._id || editTx.id, tx);
     } else {
       addTransaction(tx);
@@ -36,30 +34,28 @@ export default function TransactionModal({ open, onClose, editTx }) {
   return (
     <Modal open={open} onClose={onClose} title={editTx ? 'Edit Transaction' : 'Add Transaction'}>
 
-      {/* Type toggle */}
+      {/* Type toggle — neo-brutalist 2-block selector */}
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 1fr',
-        border: '1px solid var(--border2)', borderRadius: 10,
-        overflow: 'hidden', marginBottom: 18
+        border: '1.5px solid var(--border)', borderRadius: 6,
+        overflow: 'hidden', marginBottom: 20, boxShadow: '2px 2px 0px var(--border)',
       }}>
         {['income', 'expense'].map(t => (
-          <button key={t}
-            onClick={() => {
-              set('type', t);
-              set('category', CATEGORIES[t][0].name);
-            }}
+          <button
+            key={t}
+            onClick={() => { set('type', t); set('category', CATEGORIES[t][0].name); }}
             style={{
-              padding: '10px', border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font)', fontSize: 14, fontWeight: 600,
-              transition: 'all 0.2s',
+              padding: '11px', border: 'none',
+              borderRight: t === 'income' ? '1.5px solid var(--border)' : 'none',
+              cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 14, fontWeight: 700,
+              transition: 'all 0.15s',
               background: form.type === t
-                ? (t === 'income' ? 'var(--green-light)' : 'var(--red-light)')
+                ? (t === 'income' ? 'var(--lime)' : '#FF6B6B')
                 : 'var(--surface2)',
-              color: form.type === t
-                ? (t === 'income' ? 'var(--green)' : 'var(--red)')
-                : 'var(--text3)',
-            }}>
-            {t === 'income' ? '+ Income' : '− Expense'}
+              color: form.type === t ? '#171717' : 'var(--text3)',
+            }}
+          >
+            {t === 'income' ? '↑ Income' : '↓ Expense'}
           </button>
         ))}
       </div>
@@ -106,7 +102,7 @@ export default function TransactionModal({ open, onClose, editTx }) {
       </div>
 
       {/* Description */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 22 }}>
         <Input
           label="Description"
           placeholder="e.g. Grocery run at D-Mart"

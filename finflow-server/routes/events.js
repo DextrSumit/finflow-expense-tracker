@@ -1,7 +1,10 @@
 const router    = require('express').Router();
+const mongoose  = require('mongoose');
 const auth      = require('../middleware/authMiddleware');
 const Event       = require('../models/Event');
 const Transaction = require('../models/Transaction');
+
+const isValidId = id => mongoose.Types.ObjectId.isValid(id);
 
 router.use(auth);
 
@@ -26,6 +29,10 @@ router.get('/', async (req, res) => {
 // ── GET single event with its expenses ────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid event ID' });
+    }
+
     const ev = await Event.findOne({ _id: req.params.id, user: req.userId });
     if (!ev) return res.status(404).json({ message: 'Event not found' });
 
@@ -42,12 +49,16 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, emoji, category, budget, startDate, endDate, note } = req.body;
-    if (!name || !budget || !startDate) {
+    if (!name || budget === undefined || !startDate) {
       return res.status(400).json({ message: 'name, budget and startDate are required' });
     }
+    const parsedBudget = parseFloat(budget);
+    if (isNaN(parsedBudget) || parsedBudget < 0) {
+      return res.status(400).json({ message: 'Budget must be a non-negative number' });
+    }
     const ev = await Event.create({
-      user: req.userId, name, emoji, category, budget,
-      startDate, endDate: endDate || null, note,
+      user: req.userId, name: String(name).trim(), emoji: emoji || '🎉', category: category || 'Personal', budget: parsedBudget,
+      startDate, endDate: endDate || null, note: note || '',
     });
     res.status(201).json({ ...ev.toObject(), spent: 0, expenses: [] });
   } catch (err) {
@@ -58,9 +69,25 @@ router.post('/', async (req, res) => {
 // ── PUT update event ──────────────────────────────────────────────────────
 router.put('/:id', async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid event ID' });
+    }
+
+    const updates = { ...req.body };
+    delete updates._id;
+    delete updates.user;
+
+    if (updates.budget !== undefined) {
+      const parsedBudget = parseFloat(updates.budget);
+      if (isNaN(parsedBudget) || parsedBudget < 0) {
+        return res.status(400).json({ message: 'Budget must be a non-negative number' });
+      }
+      updates.budget = parsedBudget;
+    }
+
     const ev = await Event.findOneAndUpdate(
       { _id: req.params.id, user: req.userId },
-      req.body,
+      updates,
       { new: true }
     );
     if (!ev) return res.status(404).json({ message: 'Event not found' });
@@ -76,6 +103,10 @@ router.put('/:id', async (req, res) => {
 // ── DELETE event (orphans linked transactions — they revert to monthly budget) ──
 router.delete('/:id', async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid event ID' });
+    }
+
     const ev = await Event.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!ev) return res.status(404).json({ message: 'Event not found' });
     // Transactions are intentionally NOT deleted — they become orphaned
@@ -89,18 +120,27 @@ router.delete('/:id', async (req, res) => {
 // ── POST add expense to event ─────────────────────────────────────────────
 router.post('/:id/expenses', async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid event ID' });
+    }
+
     const ev = await Event.findOne({ _id: req.params.id, user: req.userId });
     if (!ev) return res.status(404).json({ message: 'Event not found' });
 
     const { amount, category, date, desc, recur } = req.body;
-    if (!amount || !category || !date) {
+    if (amount === undefined || !category || !date) {
       return res.status(400).json({ message: 'amount, category and date are required' });
+    }
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ message: 'Amount must be a positive number' });
     }
 
     const tx = await Transaction.create({
       user: req.userId,
       type: 'expense',
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       category,
       date,
       desc:    desc || '',
@@ -117,6 +157,13 @@ router.post('/:id/expenses', async (req, res) => {
 // ── DELETE remove an expense from an event ────────────────────────────────
 router.delete('/:id/expenses/:txId', async (req, res) => {
   try {
+    if (!isValidId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid event ID' });
+    }
+    if (!isValidId(req.params.txId)) {
+      return res.status(400).json({ message: 'Invalid expense ID' });
+    }
+
     const ev = await Event.findOne({ _id: req.params.id, user: req.userId });
     if (!ev) return res.status(404).json({ message: 'Event not found' });
 

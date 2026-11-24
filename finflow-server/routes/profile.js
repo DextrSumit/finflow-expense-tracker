@@ -45,6 +45,14 @@ router.put('/change-password', async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
 
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
     // 1. Get user with password
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });

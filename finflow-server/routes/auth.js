@@ -63,7 +63,19 @@ async function sendOTPEmail(email, otp) {
 // ─────────────────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    name = String(name).trim();
+    email = String(email).trim().toLowerCase();
+    password = String(password);
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
 
     // 1. Check if email already registered
     const exists = await User.findOne({ email });
@@ -131,7 +143,14 @@ router.post('/register', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────
 router.post('/verify-otp', async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    let { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    email = String(email).trim().toLowerCase();
+    otp = String(otp).trim();
 
     // 1. Find user
     const user = await User.findOne({ email });
@@ -160,6 +179,9 @@ router.post('/verify-otp', async (req, res) => {
     await user.save();
 
     // 6. Auto-login: return token so user lands on dashboard immediately
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: 'Server authentication configuration error' });
+    }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({
       message: 'Email verified successfully!',
@@ -179,7 +201,13 @@ router.post('/verify-otp', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────
 router.post('/resend-otp', async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    email = String(email).trim().toLowerCase();
 
     // 1. Find user
     const user = await User.findOne({ email });
@@ -197,9 +225,15 @@ router.post('/resend-otp', async (req, res) => {
     await user.save();
 
     // 4. Send email
-    await sendOTPEmail(email, otp);
-
-    res.json({ message: 'A new OTP has been sent to your email.' });
+    try {
+      await sendOTPEmail(email, otp);
+      res.json({ message: 'A new OTP has been sent to your email.' });
+    } catch (emailErr) {
+      console.error('Resend OTP error:', emailErr.message);
+      res.status(502).json({
+        message: 'Failed to send OTP email. Please ensure your email configuration is valid.'
+      });
+    }
 
   } catch (err) {
     console.error('Resend OTP error:', err.message);
@@ -213,7 +247,14 @@ router.post('/resend-otp', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    email = String(email).trim().toLowerCase();
+    password = String(password);
 
     // 1. Find user
     const user = await User.findOne({ email });
@@ -233,6 +274,9 @@ router.post('/login', async (req, res) => {
     }
 
     // 4. Issue token
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: 'Server authentication configuration error' });
+    }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({
       token,

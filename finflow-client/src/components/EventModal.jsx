@@ -78,7 +78,7 @@ export default function EventModal({ open, onClose, onSave, editEvent }) {
 
       {/* Emoji Picker */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', marginBottom: 8, letterSpacing: '0.02em' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           Emoji
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -87,13 +87,16 @@ export default function EventModal({ open, onClose, onSave, editEvent }) {
               key={em}
               onClick={() => set('emoji', em)}
               style={{
-                width: 40, height: 40, fontSize: 20, border: '2px solid',
-                borderColor: form.emoji === em ? 'var(--purple)' : 'var(--border)',
-                borderRadius: 10, background: form.emoji === em ? 'var(--purple-light)' : 'var(--surface2)',
-                cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 38, height: 38, fontSize: 18, border: '1.5px solid',
+                borderColor: form.emoji === em ? 'var(--border)' : 'var(--border-soft)',
+                borderRadius: 6,
+                background: form.emoji === em ? 'var(--lime)' : 'var(--surface2)',
+                boxShadow: form.emoji === em ? '2px 2px 0px var(--border)' : 'none',
+                cursor: 'pointer', transition: 'all 0.15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
-              onMouseEnter={e => { if (form.emoji !== em) e.currentTarget.style.borderColor = 'var(--purple)'; }}
-              onMouseLeave={e => { if (form.emoji !== em) e.currentTarget.style.borderColor = 'var(--border)'; }}
+              onMouseEnter={e => { if (form.emoji !== em) e.currentTarget.style.borderColor = 'var(--border)'; }}
+              onMouseLeave={e => { if (form.emoji !== em) e.currentTarget.style.borderColor = 'var(--border-soft)'; }}
             >
               {em}
             </button>
@@ -134,7 +137,7 @@ export default function EventModal({ open, onClose, onSave, editEvent }) {
           />
           {!form.endDate && (
             <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-              Leave blank for open-ended / ongoing event
+              Leave blank for ongoing event
             </div>
           )}
         </div>
@@ -153,7 +156,7 @@ export default function EventModal({ open, onClose, onSave, editEvent }) {
       {/* Actions */}
       <div style={{ display: 'flex', gap: 10 }}>
         <Btn onClick={onClose} style={{ flex: 1 }} disabled={saving}>Cancel</Btn>
-        <Btn onClick={handleSave} variant="primary" style={{ flex: 1, background: 'var(--purple)', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }} disabled={saving}>
+        <Btn onClick={handleSave} variant="primary" style={{ flex: 1 }} disabled={saving}>
           {saving ? 'Saving…' : editEvent ? 'Update Event' : 'Create Event'}
         </Btn>
       </div>

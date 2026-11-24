@@ -1,107 +1,154 @@
 import React from 'react';
 
-export function Card({ children, style, className = '' }) {
+/* ══════════════════════════════════════════════════════════════════
+   FinFlow — Neo-Brutalist UI Component Library
+   ══════════════════════════════════════════════════════════════════ */
+
+export function Card({ children, style, className = '', hover = true }) {
+  const base = {
+    background: 'var(--surface)',
+    border: '1.5px solid var(--border)',
+    borderRadius: 'var(--radius)',
+    padding: 24,
+    boxShadow: 'var(--shadow)',
+    animation: 'fadeIn 0.3s ease',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+  };
   return (
-    <div className={`card ${className}`} style={style}>
+    <div
+      className={`card ${className}`}
+      style={{ ...base, ...style }}
+      onMouseEnter={hover ? e => { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; } : undefined}
+      onMouseLeave={hover ? e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; } : undefined}
+    >
       {children}
-      <style>{`
-        .card {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          padding: 24px;
-          box-shadow: var(--shadow);
-          animation: fadeIn 0.4s ease;
-          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-lg);
-        }
-      `}</style>
     </div>
   );
 }
 
-export function StatCard({ label, value, sub, color = 'var(--blue)', accent }) {
+export function StatCard({ label, value, sub, color = 'var(--text)', accent, highlight }) {
   return (
     <div style={{
-      background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-      padding: '24px', boxShadow: 'var(--shadow)', position: 'relative', overflow: 'hidden', animation: 'fadeIn 0.4s ease',
-      transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'default'
+      background: highlight ? 'var(--lime)' : 'var(--surface)',
+      border: '1.5px solid var(--border)',
+      borderRadius: 'var(--radius)',
+      padding: '20px 22px',
+      boxShadow: 'var(--shadow)',
+      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+      cursor: 'default',
     }}
-    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
-    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
     >
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: color, opacity: 0.8 }} />
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60, background: `linear-gradient(180deg, ${color}15 0%, transparent 100%)`, pointerEvents: 'none' }} />
-      <div style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 8, position: 'relative' }}>{label}</div>
-      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em', position: 'relative' }}>{value}</div>
-      {sub && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 6, position: 'relative', fontWeight: 500 }}>{sub}</div>}
+      <div style={{ fontSize: 11, color: highlight ? '#171717' : 'var(--text3)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: highlight ? '#171717' : color, fontFamily: 'var(--font-mono)', letterSpacing: '-0.03em', lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: highlight ? '#3D3D3D' : 'var(--text3)', marginTop: 6, fontWeight: 500 }}>{sub}</div>}
     </div>
   );
 }
 
 export function Btn({ children, onClick, variant = 'default', size = 'md', style, disabled, type = 'button' }) {
-  const base = {
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)',
-    fontWeight: 600, transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', opacity: disabled ? 0.6 : 1,
-    borderRadius: 'var(--radius-sm)', letterSpacing: '0.01em'
+  const sizes = {
+    sm: { padding: '7px 14px', fontSize: 12 },
+    md: { padding: '10px 18px', fontSize: 14 },
+    lg: { padding: '13px 26px', fontSize: 15 },
   };
-  const sizes = { sm: { padding: '8px 16px', fontSize: 13 }, md: { padding: '10px 20px', fontSize: 14 }, lg: { padding: '14px 28px', fontSize: 15 } };
   const variants = {
-    default: { background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border2)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-    primary: { background: 'var(--blue)', color: '#fff', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)' },
-    danger: { background: 'var(--red)', color: '#fff', boxShadow: '0 4px 12px rgba(244, 63, 94, 0.25)' },
-    ghost: { background: 'transparent', color: 'var(--text2)', border: '1px solid transparent' },
+    default: {
+      background: 'var(--surface)', color: 'var(--text)',
+      border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)',
+    },
+    primary: {
+      background: 'var(--lime)', color: '#171717',
+      border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)',
+    },
+    danger: {
+      background: 'var(--red)', color: '#fff',
+      border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)',
+    },
+    ghost: {
+      background: 'transparent', color: 'var(--text2)',
+      border: '1.5px solid var(--border2)',
+    },
+  };
+  const base = {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+    cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)',
+    fontWeight: 700, letterSpacing: '0.01em',
+    borderRadius: 'var(--radius-sm)',
+    transition: 'all 0.12s ease',
+    opacity: disabled ? 0.5 : 1,
   };
   return (
-    <button type={type} onClick={onClick} disabled={disabled} style={{ ...base, ...sizes[size], ...variants[variant], ...style }}
-      onMouseEnter={e => { if(!disabled) { e.currentTarget.style.filter = 'brightness(1.05)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-      onMouseLeave={e => { if(!disabled) { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'none'; } }}
-      onMouseDown={e => { if(!disabled) e.currentTarget.style.transform = 'scale(0.97)'; }}
-      onMouseUp={e => { if(!disabled) e.currentTarget.style.transform = 'translateY(-1px)'; }}
+    <button
+      type={type} onClick={onClick} disabled={disabled}
+      style={{ ...base, ...sizes[size], ...variants[variant], ...style }}
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.transform = 'translate(-1px,-1px)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; } }}
+      onMouseLeave={e => { if (!disabled) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = variants[variant]?.boxShadow || 'none'; } }}
+      onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'translate(1px,1px)'; }}
+      onMouseUp={e => { if (!disabled) e.currentTarget.style.transform = 'translate(-1px,-1px)'; }}
     >
       {children}
     </button>
   );
 }
 
-export function Badge({ children, color = 'var(--green)', bg }) {
+export function Badge({ children, color = 'var(--text)', bg }) {
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', padding: '4px 10px',
-      borderRadius: 20, fontSize: 12, fontWeight: 600, letterSpacing: '0.03em',
-      color, background: bg || `${color}15`, border: `1px solid ${color}30`
+      display: 'inline-flex', alignItems: 'center', padding: '3px 9px',
+      borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+      color, background: bg || 'var(--surface2)',
+      border: `1.5px solid ${color === 'var(--text)' ? 'var(--border2)' : color}`,
     }}>
       {children}
     </span>
   );
 }
 
-export function ProgressBar({ pct, color }) {
-  const c = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--amber)' : color || 'var(--green)';
+export function ProgressBar({ pct, color, trackBg, height = 9 }) {
+  const c = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--amber)' : color || 'var(--bar-green)';
   return (
-    <div style={{ height: 8, background: 'var(--surface2)', borderRadius: 4, overflow: 'hidden', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)' }}>
-      <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: c, borderRadius: 4, transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)', animation: 'pulse 2s infinite' }} />
-      </div>
+    <div style={{
+      height,
+      background: trackBg || 'rgba(23,23,23,0.08)',
+      border: '1.5px solid var(--border)',
+      borderRadius: 4,
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        height: '100%', width: `${Math.min(pct, 100)}%`,
+        background: c, borderRadius: 2,
+        transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+      }} />
     </div>
   );
 }
 
 export function Input({ label, ...props }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.02em' }}>{label}</label>}
-      <input style={{
-        padding: '12px 16px', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
-        background: 'var(--surface)', color: 'var(--text)', fontSize: 15, outline: 'none',
-        transition: 'all 0.2s ease', fontFamily: 'var(--font)', boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-      }}
-        onFocus={e => { e.target.style.borderColor = 'var(--blue)'; e.target.style.boxShadow = '0 0 0 3px var(--blue-light)'; }}
-        onBlur={e => { e.target.style.borderColor = 'var(--border2)'; e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.02)'; }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      {label && (
+        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+          {label}
+        </label>
+      )}
+      <input
+        style={{
+          padding: '10px 13px',
+          border: '1.5px solid var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          background: 'var(--surface)',
+          color: 'var(--text)',
+          fontSize: 14,
+          fontWeight: 500,
+          outline: 'none',
+          transition: 'all 0.12s ease',
+          fontFamily: 'var(--font)',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+        onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+        onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'var(--shadow-sm)'; }}
         {...props}
       />
     </div>
@@ -110,15 +157,29 @@ export function Input({ label, ...props }) {
 
 export function Select({ label, children, ...props }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', letterSpacing: '0.02em' }}>{label}</label>}
-      <select style={{
-        padding: '12px 16px', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
-        background: 'var(--surface)', color: 'var(--text)', fontSize: 15, outline: 'none',
-        transition: 'all 0.2s ease', fontFamily: 'var(--font)', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-      }}
-        onFocus={e => { e.target.style.borderColor = 'var(--blue)'; e.target.style.boxShadow = '0 0 0 3px var(--blue-light)'; }}
-        onBlur={e => { e.target.style.borderColor = 'var(--border2)'; e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.02)'; }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      {label && (
+        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+          {label}
+        </label>
+      )}
+      <select
+        style={{
+          padding: '10px 13px',
+          border: '1.5px solid var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          background: 'var(--surface)',
+          color: 'var(--text)',
+          fontSize: 14,
+          fontWeight: 500,
+          outline: 'none',
+          transition: 'all 0.12s ease',
+          fontFamily: 'var(--font)',
+          cursor: 'pointer',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+        onFocus={e => { e.target.style.borderColor = 'var(--lime)'; e.target.style.boxShadow = '2px 2px 0px var(--lime)'; }}
+        onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'var(--shadow-sm)'; }}
         {...props}
       >
         {children}
@@ -130,17 +191,43 @@ export function Select({ label, children, ...props }) {
 export function Modal({ open, onClose, title, children }) {
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex',
-      alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(6px)', animation: 'fadeIn 0.2s ease'
-    }}>
-      <div onClick={e => e.stopPropagation()} className="modal-body" style={{
-        background: 'var(--surface)', borderRadius: 'var(--radius)', padding: 32,
-        width: 480, maxWidth: '92vw', boxShadow: 'var(--shadow-lg)', animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)', border: '1px solid var(--border)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em' }}>{title}</span>
-          <button onClick={onClose} style={{ background: 'var(--surface2)', border: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--border2)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}>×</button>
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(23,23,23,0.72)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000, animation: 'fadeIn 0.18s ease',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="modal-body"
+        style={{
+          background: 'var(--surface)',
+          border: '2px solid var(--border)',
+          borderRadius: 'var(--radius)',
+          padding: 32,
+          width: 480, maxWidth: '92vw',
+          boxShadow: 'var(--shadow-lg)',
+          animation: 'scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text)' }}>{title}</span>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'var(--surface2)', border: '1.5px solid var(--border)',
+              cursor: 'pointer', width: 30, height: 30, borderRadius: 'var(--radius-sm)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text2)', fontSize: 16, fontWeight: 700,
+              transition: 'all 0.12s ease', boxShadow: 'var(--shadow-sm)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--red)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--red)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.color = 'var(--text2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+          >
+            ×
+          </button>
         </div>
         {children}
       </div>
@@ -150,10 +237,17 @@ export function Modal({ open, onClose, title, children }) {
 
 export function EmptyState({ icon, title, sub }) {
   return (
-    <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text3)', animation: 'fadeIn 0.4s ease' }}>
-      <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.8 }}>{icon}</div>
-      <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: 8, fontSize: 18 }}>{title}</div>
-      <div style={{ fontSize: 14, maxWidth: 300, margin: '0 auto', lineHeight: 1.6 }}>{sub}</div>
+    <div style={{ textAlign: 'center', padding: '56px 20px', animation: 'fadeIn 0.3s ease' }}>
+      <div style={{
+        width: 64, height: 64, border: '2px solid var(--border)',
+        borderRadius: 'var(--radius)', background: 'var(--surface2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 32, margin: '0 auto 16px', boxShadow: 'var(--shadow-sm)',
+      }}>
+        {icon}
+      </div>
+      <div style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 6, fontSize: 16, letterSpacing: '-0.01em' }}>{title}</div>
+      <div style={{ fontSize: 13, color: 'var(--text3)', maxWidth: 260, margin: '0 auto', lineHeight: 1.6 }}>{sub}</div>
     </div>
   );
 }
