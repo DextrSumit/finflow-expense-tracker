@@ -216,13 +216,14 @@ export function AppProvider({ children }) {
       }
       if (data.message && !data.token) {
         setAuthError(data.message);
-        return false;
+        return { success: false, message: data.message };
       }
       await setAuthSession(data);
-      return true;
+      return { success: true };
     } catch {
-      setAuthError('Login failed. Please try again.');
-      return false;
+      const msg = 'Unable to reach the server. Please check your internet connection.';
+      setAuthError(msg);
+      return { success: false, message: msg };
     } finally {
       setAuthLoading(false);
     }

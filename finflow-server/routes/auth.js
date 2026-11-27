@@ -1,6 +1,7 @@
 const router   = require('express').Router();
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User     = require('../models/User');
 
 // ── Verify Brevo API key on startup ──────────────────────────────────────
@@ -255,6 +256,14 @@ router.post('/login', async (req, res) => {
 
     email = String(email).trim().toLowerCase();
     password = String(password);
+
+    // Check database connection status
+    if (mongoose.connection.readyState !== 1) {
+      console.error('Database connection unavailable (readyState:', mongoose.connection.readyState, ')');
+      return res.status(503).json({
+        message: 'Database is currently unavailable. Please verify MongoDB connection credentials.'
+      });
+    }
 
     // 1. Find user
     const user = await User.findOne({ email });

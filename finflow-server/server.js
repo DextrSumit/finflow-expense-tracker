@@ -49,6 +49,17 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 
+// ── Database Readiness Check Middleware ──────────────────────────────────
+app.use('/api', (req, res, next) => {
+  if (req.path === '/test') return next();
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: 'Database is currently offline. Please check your MONGO_URI credentials and Network Access IP whitelist in MongoDB Atlas / Render.'
+    });
+  }
+  next();
+});
+
 app.use('/api/auth',         require('./routes/auth'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/budgets',      require('./routes/budgets'));
@@ -82,9 +93,18 @@ app.listen(PORT, () => {
 
 // Connect to MongoDB in the background
 if (process.env.MONGO_URI) {
-  mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('✅ MongoDB connected!'))
-    .catch(err => console.error('❌ MongoDB connection error:', err.message));
+  mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 5000,
+  })
+    .then(() => console.log('✅ MongoDB connected successfully!'))
+    .catch(err => {
+      console.error('❌ MongoDB connection error:', err.message);
+      if (err.message.includes('bad auth')) {
+        console.error('👉 TIP: Authentication failed. Verify that the database username and password in MONGO_URI are correct and that any special characters in the password are URL-encoded.');
+      } else if (err.message.includes('timed out') || err.message.includes('Server selection')) {
+        console.error('👉 TIP: Connection timed out. Verify that Network Access in MongoDB Atlas allows access from anywhere (0.0.0.0/0).');
+      }
+    });
 } else {
   console.error('❌ MONGO_URI is NOT set — database connection skipped!');
 }

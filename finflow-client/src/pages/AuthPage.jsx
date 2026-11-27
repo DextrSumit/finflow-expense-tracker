@@ -37,8 +37,8 @@ export default function AuthPage({ defaultScreen = 'login', onBackToHome }) {
           setPendingEmail(res.email || email);
           setMessage('Your email is not verified. Enter the OTP sent to ' + (res.email || email));
           setScreen('verify'); setOtp('');
-        } else if (res === false) {
-          setError('Login failed. Please check your credentials.');
+        } else if (res === false || (res && !res.success)) {
+          setError(res?.message || 'Login failed. Please check your credentials.');
         }
       } else if (screen === 'verify') {
         if (otp.length !== 6) { setError('Please enter the 6-digit code.'); setLoading(false); return; }
